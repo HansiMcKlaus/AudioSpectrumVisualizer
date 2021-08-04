@@ -1,0 +1,9 @@
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.zip
+*.mp3
+*.wav
+*.mp4
+!screenshots/*
