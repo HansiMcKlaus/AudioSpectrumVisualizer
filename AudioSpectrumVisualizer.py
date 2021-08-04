@@ -416,16 +416,22 @@ def full():
 
 	if(VIDEO == 1):
 		print("Converting image sequence to video.")
-		system("ffmpeg -hide_banner -loglevel error -r " + str(FRAMERATE) + " -i ./" + str(DESTINATION) + "/%0d.png -c:v libx264 -preset ultrafast -crf 16 -y " + str(DESTINATION) + ".mp4")
+
+		system('ffmpeg -hide_banner -loglevel error -r {} -i "{}/%0d.png" -c:v libx264 -preset ultrafast -crf 16 -y "{}.mp4"'
+			.format(str(FRAMERATE), str(DESTINATION), str(DESTINATION)))
+		
 		processTime = time() - startTime
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
-	
-	# if(VIDEOAUDIO == 1):
-	# 	print("Converting image sequence to video (with audio).")
-	# 	system("ffmpeg -hide_banner -loglevel error -r " + str(FRAMERATE) + " -i ./" + str(DESTINATION) + "/%0d.png -i " + str(FILENAME) + " -y " + str(DESTINATION) + ".mp4")
-	# 	processTime = time() - startTime
-	# 	print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
-	
+
+	if(VIDEOAUDIO == 1):
+		print("Converting image sequence to video (with audio).")
+		
+		system('ffmpeg -hide_banner -loglevel error -r {} -i "{}/%0d.png" -ss {} -i "{}" -t {} -c:v libx264 -preset ultrafast -crf 16 -y "{}.mp4"'
+			.format(str(FRAMERATE), str(DESTINATION), str(START), str(FILENAME), str(END-START), str(DESTINATION)))
+		
+		processTime = time() - startTime
+		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
+
 	print("Finished!")
 
 if (TEST == 1):
