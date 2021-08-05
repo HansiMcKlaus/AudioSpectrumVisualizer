@@ -431,7 +431,7 @@ def full():
 
 		flags += '-c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'.format(str(DESTINATION))
 		
-		system('ffmpeg {}'.format(flags))
+		system('ffmpeg ' + flags)
 		
 		processTime = time() - startTime
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
