@@ -26,6 +26,7 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 from os import mkdir, path, system
+from joblib import Parallel, delayed
 
 
 # Instantiate the parser
@@ -349,11 +350,11 @@ def saveImageSequence(frames):
 		mkdir(DESTINATION)
 	
 	# Save image sequence
-	frameCounter = 0
-	for frame in frames:
-		plt.imsave(str(DESTINATION) + "/" + str(frameCounter) + ".png", frame, cmap='gray')
-		frameCounter += 1
-		printProgressBar(frameCounter, len(frames))
+	Parallel(n_jobs=-1)(delayed(saveFrame)(frames[i], i, len(frames)) for i in range(len(frames)))
+
+def saveFrame(frame, frame_count, num_frames):
+	plt.imsave(str(DESTINATION) + "/" + str(frame_count) + ".png", frame, cmap='gray')
+	printProgressBar(frame_count, num_frames)
 
 
 """
