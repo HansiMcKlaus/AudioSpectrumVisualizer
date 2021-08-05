@@ -1,10 +1,10 @@
 # AudioSpectrumVisualizer
 
-Creates a customizable Image Sequence for the Spectrum of an Audio File.
+Creates a customizable image sequence for the spectrum of an audio file.
 
 
 
-## Requirements
+## Dependencies
 
 Requires the following packages: `numpy`, `audio2numpy`, `matplotlib` and `ffmpeg` 
 
@@ -26,9 +26,9 @@ Example for when audio and destination directory are not in the same directory a
 
 ## Optional  arguments
 
-`-h, --help` Opens the standard help message
+`-h, --help` Shows the standard help message
 
-`-b, -bins` Amount of bins (Bars, Points, etc). Default: 64
+`-b, --bins` Amount of bins (bars, points, etc). Default: 64
 
 `-ht, --height` Height of the image. Default: 540px
 
@@ -36,7 +36,7 @@ Example for when audio and destination directory are not in the same directory a
 
 ` -bw, --bin_width` Width of the bins. Default: auto (5/6 * width/bins)
 
-`-bs, --bin_Spacing` Spacing between bins. Default: auto (1/6 * width/bins)
+`-bs, --bin_spacing` Spacing between bins. Default: auto (1/6 * width/bins)
 
 `-fr, --framerate` Framerate of the image sequence (Frames per second). Default: 30fps
 
@@ -54,15 +54,15 @@ Example for when audio and destination directory are not in the same directory a
 
 `-fe, --frequencyEnd` Limits the range of frequencies to \<frequencyEnd>Hz. If frequencyEnd=False: Ends at highest frequency. Default: False
 
-`-v, --video` Additionaly creates a video (.mp4) from image sequence. Default: False"
+`-v, --video` Additionally creates a video (.mp4) from image sequence. Default: False"
 
-`-va, --videoAudio` Additionaly creates a video (.mp4) from image sequence and audio. Default: False"
+`-va, --videoAudio` Additionally creates a video (.mp4) from image sequence and audio. Default: False"
 
 `-ds, --disableSmoothing` Disables all smoothing (smoothT and smoothY). Default: False
 
 
 
-## Stiles
+## Styles
 
 Currently only a white bar chart, however more will be added at a later date!
 
@@ -72,10 +72,10 @@ Currently only a white bar chart, however more will be added at a later date!
 
 ## Examples
 
-Default: `python '.\Audio Spectrum Visualizer.py' <Path to Audio File> <Destination Folder>`
+Default: `python '.\AudioSpectrumVisualizer.py' <Path to Audio File> <Destination Folder>`
 
 <img src=".\screenshots\default.png" alt="default" style="zoom: 50%;" />
 
-Slim Bins: `python '.\Audio Spectrum Visualizer.py' <Path to Audio File> <Destination Folder> -b 128 -bw 5`
+Slim bins: `python '.\AudioSpectrumVisualizer.py' <Path to Audio File> <Destination Folder> -b 128 -bw 5`
 
 <img src=".\screenshots\slimBins.png" alt="default" style="zoom: 50%;" />

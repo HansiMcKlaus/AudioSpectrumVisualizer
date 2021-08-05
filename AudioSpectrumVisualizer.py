@@ -29,7 +29,7 @@ from os import mkdir, path, system
 
 
 # Instantiate the parser
-parser = argparse.ArgumentParser(description="Creates an Image Sequence for the Audio Spectrum of an Audio File.")
+parser = argparse.ArgumentParser(description="Creates an image sequence for the audio spectrum of an audio file.")
 
 # Required positional arguments
 parser.add_argument("filename", type=str,
@@ -39,7 +39,7 @@ parser.add_argument("destination", type=str, nargs='?', default="Image Sequence"
 
 # Optional arguments
 parser.add_argument("-b", "--bins", type=int, default=64,
-					help="Amount of bins (Bars, Points, etc). Default: 64")
+					help="Amount of bins (bars, points, etc). Default: 64")
 
 parser.add_argument("-ht", "--height", type=int, default=540,
 					help="Max height of the bins (height of the images). Default: 540px")
@@ -417,16 +417,20 @@ def full():
 	if(VIDEO == 1):
 		print("Converting image sequence to video.")
 
-		system('ffmpeg -hide_banner -loglevel error -r {} -i "{}/%0d.png" -c:v libx264 -preset ultrafast -crf 16 -y "{}.mp4"'
+		system('ffmpeg -hide_banner -loglevel error -r {} -i "{}/%0d.png" -c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'
 			.format(str(FRAMERATE), str(DESTINATION), str(DESTINATION)))
 		
 		processTime = time() - startTime
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
 
 	if(VIDEOAUDIO == 1):
+		if(args.end == "False"):		#Python reported the END variable as unbound here??? So I had to use args.end to initialise it again
+			END = len(frames)/FRAMERATE
+		else:
+			END = int(args.end)
 		print("Converting image sequence to video (with audio).")
 		
-		system('ffmpeg -hide_banner -loglevel error -r {} -i "{}/%0d.png" -ss {} -i "{}" -t {} -c:v libx264 -preset ultrafast -crf 16 -y "{}.mp4"'
+		system('ffmpeg -hide_banner -loglevel error -r {} -i "{}/%0d.png" -ss {} -i "{}" -t {} -c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'
 			.format(str(FRAMERATE), str(DESTINATION), str(START), str(FILENAME), str(END-START), str(DESTINATION)))
 		
 		processTime = time() - startTime
