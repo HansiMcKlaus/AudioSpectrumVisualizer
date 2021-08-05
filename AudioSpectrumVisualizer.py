@@ -421,9 +421,9 @@ def full():
 		flags += '-i "{}/%0d.png" '.format(str(DESTINATION))
 		if VIDEOAUDIO:
 			print("Converting image sequence to video (with audio).")
-			flags += '-i "{}" '.format(str(FILENAME))
 			if(START != 0):
 				flags += '-ss {} '.format(str(START))
+			flags += '-i "{}" '.format(str(FILENAME))
 			if(END != "False"):
 				flags += '-t {} '.format(END - START)
 		else:
