@@ -6,7 +6,7 @@ Creates a customizable image sequence for the spectrum of an audio file.
 
 ## Dependencies
 
-Requires the following packages: `numpy`, `audio2numpy`, `matplotlib` and `ffmpeg` 
+Requires the following packages: `numpy`, `audio2numpy`, `matplotlib`, `ffmpeg` and `joblib`
 
 
 
