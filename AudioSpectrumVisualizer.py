@@ -349,6 +349,7 @@ def saveImageSequence(frames):
 	if not path.exists(DESTINATION):
 		mkdir(DESTINATION)
 	
+	# Save image sequence
 	frameCounter = 0
 	for frame in frames:
 		plt.imsave(str(DESTINATION) + "/" + str(frameCounter) + ".png", frame, cmap='gray')
