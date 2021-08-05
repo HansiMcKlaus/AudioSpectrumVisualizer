@@ -349,12 +349,11 @@ def saveImageSequence(frames):
 	if not path.exists(DESTINATION):
 		mkdir(DESTINATION)
 	
-	# Save image sequence
-	Parallel(n_jobs=-1)(delayed(saveFrame)(frames[i], i, len(frames)) for i in range(len(frames)))
-
-def saveFrame(frame, frameCount, numFrames):
-	plt.imsave(str(DESTINATION) + "/" + str(frame_count) + ".png", frame, cmap='gray')
-	printProgressBar(frameCount, numFrames)
+	frameCounter = 0
+	for frame in frames:
+		plt.imsave(str(DESTINATION) + "/" + str(frameCounter) + ".png", frame, cmap='gray')
+		frameCounter += 1
+		printProgressBar(frameCounter, len(frames))
 
 
 """
