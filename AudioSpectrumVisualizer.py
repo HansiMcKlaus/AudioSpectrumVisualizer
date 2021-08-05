@@ -352,9 +352,9 @@ def saveImageSequence(frames):
 	# Save image sequence
 	Parallel(n_jobs=-1)(delayed(saveFrame)(frames[i], i, len(frames)) for i in range(len(frames)))
 
-def saveFrame(frame, frame_count, num_frames):
+def saveFrame(frame, frameCount, numFrames):
 	plt.imsave(str(DESTINATION) + "/" + str(frame_count) + ".png", frame, cmap='gray')
-	printProgressBar(frame_count, num_frames)
+	printProgressBar(frameCount, numFrames)
 
 
 """
