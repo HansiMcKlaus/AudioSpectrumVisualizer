@@ -415,24 +415,23 @@ def full():
 	processTime = time() - startTime
 	print("Created and saved Image Sequence in " + str(format(processTime, ".3f")) + " seconds.")
 
-	if(VIDEO == 1):
-		print("Converting image sequence to video.")
-
-		system('ffmpeg -hide_banner -loglevel error -r {} -i "{}/%0d.png" -c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'
-			.format(str(FRAMERATE), str(DESTINATION), str(DESTINATION)))
-		
-		processTime = time() - startTime
-		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
-
-	if(VIDEOAUDIO == 1):
-		if(args.end == "False"):		#Python reported the END variable as unbound here??? So I had to use args.end to initialise it again
-			END = len(frames)/FRAMERATE
+	if VIDEOAUDIO or VIDEO:
+		flags = '-hide_banner -loglevel error '
+		flags += '-r {} '.format(str(FRAMERATE))
+		flags += '-i "{}/%0d.png" '.format(str(DESTINATION))
+		if VIDEOAUDIO:
+			print("Converting image sequence to video (with audio).")
+			flags += '-i "{}" '.format(str(FILENAME))
+			if(START != 0):
+				flags += '-ss {} '.format(str(START))
+			if(END != "False"):
+				flags += '-t {} '.format(END - START)
 		else:
-			END = int(args.end)
-		print("Converting image sequence to video (with audio).")
+			print("Converting image sequence to video.")
+
+		flags += '-c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'.format(str(DESTINATION))
 		
-		system('ffmpeg -hide_banner -loglevel error -r {} -i "{}/%0d.png" -ss {} -i "{}" -t {} -c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'
-			.format(str(FRAMERATE), str(DESTINATION), str(START), str(FILENAME), str(END-START), str(DESTINATION)))
+		system('ffmpeg {}'.format(flags))
 		
 		processTime = time() - startTime
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
