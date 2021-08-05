@@ -26,10 +26,11 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 from os import mkdir, path, system
+from joblib import Parallel, delayed
 
 
 # Instantiate the parser
-parser = argparse.ArgumentParser(description="Creates an Image Sequence for the Audio Spectrum of an Audio File.")
+parser = argparse.ArgumentParser(description="Creates an image sequence for the audio spectrum of an audio file.")
 
 # Required positional arguments
 parser.add_argument("filename", type=str,
@@ -39,7 +40,7 @@ parser.add_argument("destination", type=str, nargs='?', default="Image Sequence"
 
 # Optional arguments
 parser.add_argument("-b", "--bins", type=int, default=64,
-					help="Amount of bins (Bars, Points, etc). Default: 64")
+					help="Amount of bins (bars, points, etc). Default: 64")
 
 parser.add_argument("-ht", "--height", type=int, default=540,
 					help="Max height of the bins (height of the images). Default: 540px")
@@ -414,20 +415,23 @@ def full():
 	processTime = time() - startTime
 	print("Created and saved Image Sequence in " + str(format(processTime, ".3f")) + " seconds.")
 
-	if(VIDEO == 1):
-		print("Converting image sequence to video.")
+	if VIDEOAUDIO or VIDEO:
+		flags = '-hide_banner -loglevel error '
+		flags += '-r {} '.format(str(FRAMERATE))
+		flags += '-i "{}/%0d.png" '.format(str(DESTINATION))
+		if VIDEOAUDIO:
+			print("Converting image sequence to video (with audio).")
+			if(START != 0):
+				flags += '-ss {} '.format(str(START))
+			flags += '-i "{}" '.format(str(FILENAME))
+			if(END != "False"):
+				flags += '-t {} '.format(END - START)
+		else:
+			print("Converting image sequence to video.")
 
-		system('ffmpeg -hide_banner -loglevel error -r {} -i "{}/%0d.png" -c:v libx264 -preset ultrafast -crf 16 -y "{}.mp4"'
-			.format(str(FRAMERATE), str(DESTINATION), str(DESTINATION)))
+		flags += '-c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'.format(str(DESTINATION))
 		
-		processTime = time() - startTime
-		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
-
-	if(VIDEOAUDIO == 1):
-		print("Converting image sequence to video (with audio).")
-		
-		system('ffmpeg -hide_banner -loglevel error -r {} -i "{}/%0d.png" -ss {} -i "{}" -t {} -c:v libx264 -preset ultrafast -crf 16 -y "{}.mp4"'
-			.format(str(FRAMERATE), str(DESTINATION), str(START), str(FILENAME), str(END-START), str(DESTINATION)))
+		system('ffmpeg ' + flags)
 		
 		processTime = time() - startTime
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
