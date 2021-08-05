@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-@author: HansiMcKlaus
+@author: Maik Simke
+Co-author: Jannick Kremer, Jonas Bögle
 
 Creates an Image Sequence for the Spectrum of an Audio File.
 
@@ -8,7 +9,10 @@ Dependencies: numpy, audio2numpy, matplotlib, ffmpeg
 """
 
 """
-TODO: Implement mp4 export with audio (-va)
+TODO: No Globals, NO CONSTANT NOMENKLATUR
+TODO: Chunking
+TODO: Optional linear interpolation for bin calculation if bin acces only one point in array
+TODO: x-axis and y-axis log scaling
 TODO: Implement different styles
 		Styles:
 			Bar: Filled, Blocks, Centered on y-axis
@@ -16,7 +20,6 @@ TODO: Implement different styles
 			Line: Thicknes
 			Filled
 TODO: Implement color
-TODO: Make the x-axis scaling actually logarithmic
 TODO: Implement channel selection
 """
 
@@ -295,13 +298,14 @@ Example: 736 amplitudes over 1080 bins --> Every bin contains the mean amplitude
 def createBins(frameData):
 	bins = []
 	for data in frameData:
+		frameBins = []
 		for i in range(BINS):
 			dataStart = int(((i*len(data)/BINS)/len(data))**XLOG * len(data))
 			dataEnd = int((((i+1)*len(data)/BINS)/len(data))**XLOG * len(data))
-
 			if (dataEnd == dataStart):
 				dataEnd += 1						# Ensures [dataStart:dataEnd] does not result NaN
-			bins.append(np.mean(data[dataStart:dataEnd]))
+			frameBins.append(np.mean(data[dataStart:dataEnd]))
+		bins.append(frameBins)
 
 	return bins
 
@@ -310,18 +314,19 @@ def createBins(frameData):
 Smoothes the bins in a frame (Over the past/next n frames).
 """
 def smoothBinData(bins):
-	binDataSmoothed = []
-	for j in range(int(len(bins)/BINS)):
-		currentBins = bins[j*BINS:(j+1)*BINS]
-		for k in range(int(len(currentBins))):
-			if(k < SMOOTHY):						# First n bins
-				binDataSmoothed.append(np.mean(currentBins[:k+SMOOTHY+1]))
-			elif(k >= len(currentBins)-SMOOTHY):	# Last n bins
-				binDataSmoothed.append(np.mean(currentBins[k-SMOOTHY:]))
+	binsSmoothed = []
+	for frameBinData in bins:
+		smoothedBinData = []
+		for i in range(len(frameBinData)):
+			if(i < SMOOTHY):						# First n bins
+				smoothedBinData.append(np.mean(currentBins[:i+SMOOTHY+1]))
+			elif(i >= len(currentBins)-SMOOTHY):	# Last n bins
+				smoothedBinData.append(np.mean(currentBins[i-SMOOTHY:]))
 			else:									# Normal Case
-				binDataSmoothed.append(np.mean(currentBins[k-SMOOTHY:k+SMOOTHY+1]))
+				smoothedBinData.append(np.mean(currentBins[i-SMOOTHY:i+SMOOTHY+1]))
+		binsSmoothed.append(smoothedBinData)
 
-	return binDataSmoothed
+	return binsSmoothed
 
 
 """
@@ -330,10 +335,11 @@ Renders frames from bin data.
 def renderFrames(bins):
 	bins = bins/np.max(bins)						# Normalize vector length to [0,1]
 	frames = []
-	for j in range(int(len(bins)/BINS)):
+	for j in range(len(bins)):
 		frame = np.zeros((HEIGHT, int(BINS*(BIN_WIDTH+BIN_SPACING))))
+		# frame = frame.astype(np.uint8)			# Set datatype to uint8 to reduce RAM usage (Doesn't work)
 		for k in range(BINS):
-			frame[int(0):int(np.ceil(bins[j*BINS + k]*frame.shape[0])),
+			frame[int(0):int(np.ceil(bins[j, k]*frame.shape[0])),
 				int(k*BIN_WIDTH + k*BIN_SPACING):int((k+1)*BIN_WIDTH + k*BIN_SPACING)] = 1
 		frame = np.flipud(frame)
 		frames.append(frame)
@@ -402,8 +408,8 @@ def full():
 	print("Bins created. (3/4)")
 
 	if(SMOOTHY > 0):
-		binDataSmoothed = smoothBinData(bins)
-		bins = binDataSmoothed
+		binsSmoothed = smoothBinData(bins)
+		bins = binsSmoothed
 
 	frames = renderFrames(bins)
 	print("Frames created. (4/4)")
