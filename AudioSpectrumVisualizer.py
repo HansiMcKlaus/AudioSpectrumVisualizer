@@ -60,8 +60,11 @@ parser.add_argument("-bs", "--bin_spacing", type=str, default="auto",
 parser.add_argument("-fr", "--framerate", type=float, default=30,
 					help="Framerate of the image sequence (Frames per second). Default: 30fps")
 
-parser.add_argument("-xlog", type=float, default=1,
-					help="Scales the X-axis logarithmically to a given base. Default: 1 (Linear Scaling)")
+parser.add_argument("-xlog", type=float, default=0,
+					help="Scales the X-axis logarithmically to a given base. Default: 0 (Linear)")
+
+parser.add_argument("-ylog", type=float, default=0,
+					help="Scales the Y-axis logarithmically to a given base. Default: 0 (Linear)")
 
 parser.add_argument("-st", "--smoothT", type=str, default="0",
 					help="Smoothing over past/next <smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0")
@@ -125,8 +128,11 @@ def processArgs(fileData, samplerate):
 	while(args.framerate <= 0):
 		args.framerate = float(input("Framerate must be at least 1. New framerate: "))
 
-	while(args.xlog <= 0):
-		args.xlog = float(input("Scalar must be bigger than 0. New Scalar: "))
+	while(args.xlog < 0):
+		args.xlog = float(input("Scalar must not be smaller than 0. New Scalar: "))
+
+	while(args.ylog < 0):
+		args.ylog = float(input("Scalar must not be smaller than 0. New Scalar: "))
 
 	if(args.bin_width != "auto"):
 		while(float(args.bin_width) < 1):
@@ -300,8 +306,14 @@ def createBins(frameData):
 	for data in frameData:
 		frameBins = []
 		for i in range(args.bins):
-			dataStart = int(((i*len(data)/args.bins)/len(data))**args.xlog * len(data))
-			dataEnd = int((((i+1)*len(data)/args.bins)/len(data))**args.xlog * len(data))
+			if(args.xlog == 0):
+				dataStart = int(i*len(data)/args.bins)
+				dataEnd = int((i+1)*len(data)/args.bins)
+			else:
+				#dataStart = int((i/args.bins))
+				#dataEnd = 
+				dataStart = int(((i*len(data)/args.bins)/len(data))**args.xlog * len(data))
+				dataEnd = int((((i+1)*len(data)/args.bins)/len(data))**args.xlog * len(data))
 			if (dataEnd == dataStart):
 				dataEnd += 1							# Ensures [dataStart:dataEnd] does not result NaN
 			frameBins.append(np.mean(data[dataStart:dataEnd]))
@@ -339,7 +351,11 @@ def renderFrames(bins):
 		frame = np.zeros((args.height, int(args.bins*(args.bin_width+args.bin_spacing))))
 		# frame = frame.astype(np.uint8)			# Set datatype to uint8 to reduce RAM usage (Doesn't work)
 		for k in range(args.bins):
-			frame[int(0):int(np.ceil(bins[j, k]*frame.shape[0])),
+			if (args.ylog == 0):
+				binHeight = np.ceil(bins[j, k] * frame.shape[0])
+			else:
+				binHeight = np.ceil(np.log2(args.ylog * bins[j, k] + 1) * frame.shape[0])
+			frame[int(0):int(binHeight),
 				int(k*args.bin_width + k*args.bin_spacing):int((k+1)*args.bin_width + k*args.bin_spacing)] = 1
 		frame = np.flipud(frame)
 		frames.append(frame)

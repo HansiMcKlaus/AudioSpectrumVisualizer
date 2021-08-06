@@ -40,7 +40,9 @@ Example for when audio and destination directory are not in the same directory a
 
 `-fr, --framerate` Framerate of the image sequence (Frames per second). Default: 30
 
-`-xlog` Scales the X-axis logarithmically to a given base. Default: 1 (Linear Scaling)
+`-xlog` Scales the X-axis logarithmically to a given base. Default: 0 (Linear)
+
+`-ylog` Scales the Y-axis logarithmically to a given base. Default: 0 (Linear)
 
 `-st, --smoothT` Smoothing over past/next \<smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0
 
