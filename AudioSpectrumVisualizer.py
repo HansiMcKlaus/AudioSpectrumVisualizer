@@ -9,8 +9,9 @@ Dependencies: numpy, audio2numpy, matplotlib, ffmpeg
 """
 
 """
-TODO: No Globals, NO CONSTANT NOMENKLATUR
+TODO: Check Input after loading file and change start/end, fs/fe
 TODO: Chunking
+TODO: Check if file exists
 TODO: Optional linear interpolation for bin calculation if bin acces only one point in array
 TODO: x-axis and y-axis log scaling
 TODO: Implement different styles
@@ -153,73 +154,56 @@ if(args.frequencyStart != "False" and args.frequencyEnd != "False"):
 		args.frequencyEnd = float(input("Frequency end must be higher than frequency start. New end frequency: "))
 
 
-# Flags
-TEST = args.test									# Renders only a single frame for style testing. Default: False
-VIDEO = args.video									# Additionaly creates a video (.mp4) from image sequence. Default: False
-VIDEOAUDIO = args.videoAudio						# Additionaly creates a video (.mp4) from image sequence and audio. Default: False
-
-# Positional arguments:
-FILENAME = args.filename							# Name or path of the audio file
-
-#Optional positional arguments:
-DESTINATION = args.destination						# Name or path of the created directory in which the image sequence is saved. Default: Image Sequence
-
-# Optional arguments:
-BINS = args.bins									# Amount of bins (Bars, Points, etc). Default: 64
-HEIGHT = args.height								# Max height of the bins (height of the images). Default: 540px
-WIDTH = args.width									# Width of the image. Default: 1920px
-FRAMERATE = args.framerate							# Framerate of the image sequence (Frames per second). Default: 30fps
-XLOG = args.xlog									# Scales the X-axis logarithmically to a given base. Default: 1 (Linear Scaling)
-
+# Process optional arguments:
 if(args.bin_width == "auto" and args.bin_spacing != "auto"):		# Only bin_spacing is given
-	BIN_WIDTH = WIDTH/BINS - float(args.bin_spacing)
-	BIN_SPACING = float(args.bin_spacing)
+	args.bin_width = args.width/args.bins - float(args.bin_spacing)
+	args.bin_spacing = float(args.bin_spacing)
 elif(args.bin_width != "auto" and args.bin_spacing == "auto"):		# Only bin_width is given
-	BIN_WIDTH = float(args.bin_width)
-	BIN_SPACING = WIDTH/BINS - float(args.bin_width)
+	args.bin_width = float(args.bin_width)
+	args.bin_spacing = args.width/args.bins - float(args.bin_width)
 elif(args.bin_width == "auto" and args.bin_spacing == "auto"):		# Neither is given
-	BIN_WIDTH = WIDTH/BINS * (5/6)
-	BIN_SPACING = WIDTH/BINS * (1/6)
+	args.bin_width = args.width/args.bins * (5/6)
+	args.bin_spacing = args.width/args.bins * (1/6)
 else:																# Both are given (Overwrites width)
-	BIN_WIDTH = float(args.bin_width)
-	BIN_SPACING = float(args.bin_spacing)
+	args.bin_width = float(args.bin_width)
+	args.bin_spacing = float(args.bin_spacing)
 
 if(args.smoothT == "auto"):							# Smoothing over past/next <smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0
-	SMOOTHT = int(FRAMERATE/15)
+	args.smoothT = int(args.framerate/15)
 else:
-	SMOOTHT = int(args.smoothT)
+	args.smoothT = int(args.smoothT)
 
 if(args.smoothY == "auto"):							# Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
-	SMOOTHY = int(BINS/32)
+	args.smoothY = int(args.bins/32)
 else:
-	SMOOTHY = int(args.smoothY)
+	args.smoothY = int(args.smoothY)
 
-if(args.start == "False" or TEST == 1):				# Begins render at <start> seconds. If start=False: Renders from the start of the sound file. Default: False
-	START = 0
+if(args.start == "False" or args.test == 1):		# Begins render at <start> seconds. If start=False: Renders from the start of the sound file. Default: False
+	args.start = 0
 else:
-	START = float(args.start)
+	args.start = float(args.start)
 
-if(args.end == "False" or TEST == 1):				# Ends render at <end> seconds. If end=False: Renders to the end of the sound file. Default: False
-	END = "False"
+if(args.end == "False" or args.test == 1):			# Ends render at <end> seconds. If end=False: Renders to the end of the sound file. Default: False
+	args.end = "False"
 else:
-	END = float(args.end)
+	args.end = float(args.end)
 
 if(args.frequencyStart == "False"):					# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=False: Starts at 0Hz. Default: False
-	FREQUENCY_START = 0
+	args.frequencyStart = 0
 else:
-	FREQUENCY_START = float(args.frequencyStart)
+	args.frequencyStart = float(args.frequencyStart)
 
 if(args.frequencyEnd == "False"):					# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=False: Ends at highest frequency. Default: False
-	FREQUENCY_END = "False"
+	args.frequencyEnd = "False"
 else:
-	FREQUENCY_END = float(args.frequencyEnd)
+	args.frequencyEnd = float(args.frequencyEnd)
 
 
 """
 Loads data and samplerate from <FILENAME>.
 """
 def loadAudio():
-	fileData, samplerate = open_audio(FILENAME)
+	fileData, samplerate = open_audio(args.filename)
 	if(len(fileData.shape) == 2):					# Averages multiple channels into a mono channel
 		fileData = np.mean(fileData, axis=1)
 	return fileData, samplerate
@@ -235,13 +219,13 @@ def calculateFrameData(samplerate, fileData):
 	frameCounter = 0
 
 	# Slices fileData to start and end point
-	if(END == "False"):
-		fileData = fileData[int(START*samplerate):]
+	if(args.end == "False"):
+		fileData = fileData[int(args.start*samplerate):]
 	else:
-		fileData = fileData[int(START*samplerate):int(END*samplerate)]
+		fileData = fileData[int(args.start*samplerate):int(args.end*samplerate)]
 
 	# Splits Data into frames
-	stepSize = samplerate/FRAMERATE
+	stepSize = samplerate/args.framerate
 	while (stepSize * frameCounter < len(fileData)):
 		frameDataStart = int(stepSize * frameCounter)
 		frameDataEnd = int(stepSize * (frameCounter + 1))
@@ -255,10 +239,10 @@ def calculateFrameData(samplerate, fileData):
 		#frameData.append([frameDataAmplitudes, frameDataFrequencies])
 
 	# Slices frameDataAmplitudes to only contain the amplitudes between startFrequency and endFrequency
-		if(FREQUENCY_END == "False"):
-			frameDataAmplitudes = frameDataAmplitudes[int(FREQUENCY_START/samplerate*len(frameDataAmplitudes)):]
+		if(args.frequencyEnd == "False"):
+			frameDataAmplitudes = frameDataAmplitudes[int(args.frequencyStart/samplerate*len(frameDataAmplitudes)):]
 		else:
-			frameDataAmplitudes = frameDataAmplitudes[int(FREQUENCY_START/samplerate*len(frameDataAmplitudes)):int(FREQUENCY_END/samplerate*len(frameDataAmplitudes))]
+			frameDataAmplitudes = frameDataAmplitudes[int(args.frequencyStart/samplerate*len(frameDataAmplitudes)):int(args.frequencyEnd/samplerate*len(frameDataAmplitudes))]
 
 		frameData.append(frameDataAmplitudes)
 		frameCounter += 1
@@ -280,12 +264,12 @@ Creates a kind of foresight/delay as it takes data from previous/next frames -->
 def smoothFrameData(frameData):
 	frameDataSmoothed = []
 	for i in range(len(frameData)):
-		if(i < SMOOTHT):							# First n frame data
-			frameDataSmoothed.append(np.mean(frameData[:i+SMOOTHT+1], axis=0))
-		elif(i >= len(frameData)-SMOOTHT):			# Last n frame data
-			frameDataSmoothed.append(np.mean(frameData[i-SMOOTHT:], axis=0))
+		if(i < args.smoothT):							# First n frame data
+			frameDataSmoothed.append(np.mean(frameData[:i+args.smoothT+1], axis=0))
+		elif(i >= len(frameData)-args.smoothT):			# Last n frame data
+			frameDataSmoothed.append(np.mean(frameData[i-args.smoothT:], axis=0))
 		else:										# Normal Case
-			frameDataSmoothed.append(np.mean(frameData[i-SMOOTHT:i+SMOOTHT+1], axis=0))
+			frameDataSmoothed.append(np.mean(frameData[i-args.smoothT:i+args.smoothT+1], axis=0))
 
 	return frameDataSmoothed
 
@@ -299,9 +283,9 @@ def createBins(frameData):
 	bins = []
 	for data in frameData:
 		frameBins = []
-		for i in range(BINS):
-			dataStart = int(((i*len(data)/BINS)/len(data))**XLOG * len(data))
-			dataEnd = int((((i+1)*len(data)/BINS)/len(data))**XLOG * len(data))
+		for i in range(args.bins):
+			dataStart = int(((i*len(data)/args.bins)/len(data))**args.xlog * len(data))
+			dataEnd = int((((i+1)*len(data)/args.bins)/len(data))**args.xlog * len(data))
 			if (dataEnd == dataStart):
 				dataEnd += 1						# Ensures [dataStart:dataEnd] does not result NaN
 			frameBins.append(np.mean(data[dataStart:dataEnd]))
@@ -318,12 +302,12 @@ def smoothBinData(bins):
 	for frameBinData in bins:
 		smoothedBinData = []
 		for i in range(len(frameBinData)):
-			if(i < SMOOTHY):						# First n bins
-				smoothedBinData.append(np.mean(currentBins[:i+SMOOTHY+1]))
-			elif(i >= len(currentBins)-SMOOTHY):	# Last n bins
-				smoothedBinData.append(np.mean(currentBins[i-SMOOTHY:]))
+			if(i < args.smoothY):						# First n bins
+				smoothedBinData.append(np.mean(frameBinData[:i+args.smoothY+1]))
+			elif(i >= len(frameBinData)-args.smoothY):	# Last n bins
+				smoothedBinData.append(np.mean(frameBinData[i-args.smoothY:]))
 			else:									# Normal Case
-				smoothedBinData.append(np.mean(currentBins[i-SMOOTHY:i+SMOOTHY+1]))
+				smoothedBinData.append(np.mean(frameBinData[i-args.smoothY:i+args.smoothY+1]))
 		binsSmoothed.append(smoothedBinData)
 
 	return binsSmoothed
@@ -336,11 +320,11 @@ def renderFrames(bins):
 	bins = bins/np.max(bins)						# Normalize vector length to [0,1]
 	frames = []
 	for j in range(len(bins)):
-		frame = np.zeros((HEIGHT, int(BINS*(BIN_WIDTH+BIN_SPACING))))
+		frame = np.zeros((args.height, int(args.bins*(args.bin_width+args.bin_spacing))))
 		# frame = frame.astype(np.uint8)			# Set datatype to uint8 to reduce RAM usage (Doesn't work)
-		for k in range(BINS):
+		for k in range(args.bins):
 			frame[int(0):int(np.ceil(bins[j, k]*frame.shape[0])),
-				int(k*BIN_WIDTH + k*BIN_SPACING):int((k+1)*BIN_WIDTH + k*BIN_SPACING)] = 1
+				int(k*args.bin_width + k*args.bin_spacing):int((k+1)*args.bin_width + k*args.bin_spacing)] = 1
 		frame = np.flipud(frame)
 		frames.append(frame)
 
@@ -352,13 +336,13 @@ Starts at "0.png" for first frame
 """
 def saveImageSequence(frames):
 	# Create destination folder
-	if not path.exists(DESTINATION):
-		mkdir(DESTINATION)
+	if not path.exists(args.destination):
+		mkdir(args.destination)
 	
 	# Save image sequence
 	frameCounter = 0
 	for frame in frames:
-		plt.imsave(str(DESTINATION) + "/" + str(frameCounter) + ".png", frame, cmap='gray')
+		plt.imsave(str(args.destination) + "/" + str(frameCounter) + ".png", frame, cmap='gray')
 		frameCounter += 1
 		printProgressBar(frameCounter, len(frames))
 
@@ -378,8 +362,8 @@ Renders a single frame from testData (00:11:000 to 00:11:033 of "Bursty Greedy S
 """
 def testRender():
 	testData = np.load("testData.npy")
-	START = 0
-	END = "False"
+	args.start = 0
+	args.end = "False"
 
 	frameData = calculateFrameData(44100, testData)
 	bins = createBins(frameData)
@@ -400,42 +384,42 @@ def full():
 	frameData = calculateFrameData(samplerate, fileData)
 	print("Frame data created. (2/4)")
 
-	if(SMOOTHT > 0):
+	if(args.smoothT > 0):
 		frameDataSmoothed = smoothFrameData(frameData)
 		frameData = frameDataSmoothed
 
 	bins = createBins(frameData)
 	print("Bins created. (3/4)")
 
-	if(SMOOTHY > 0):
+	if(args.smoothY > 0):
 		binsSmoothed = smoothBinData(bins)
 		bins = binsSmoothed
 
 	frames = renderFrames(bins)
 	print("Frames created. (4/4)")
 
-	print("Saving Image Sequence to: " + DESTINATION)
+	print("Saving Image Sequence to: " + args.destination)
 	saveImageSequence(frames)
 
 	print()
 	processTime = time() - startTime
 	print("Created and saved Image Sequence in " + str(format(processTime, ".3f")) + " seconds.")
 
-	if VIDEOAUDIO or VIDEO:
+	if args.videoAudio or args.video:
 		flags = '-hide_banner -loglevel error '
-		flags += '-r {} '.format(str(FRAMERATE))
-		flags += '-i "{}/%0d.png" '.format(str(DESTINATION))
-		if VIDEOAUDIO:
+		flags += '-r {} '.format(str(args.framerate))
+		flags += '-i "{}/%0d.png" '.format(str(args.destination))
+		if args.videoAudio:
 			print("Converting image sequence to video (with audio).")
-			if(START != 0):
-				flags += '-ss {} '.format(str(START))
-			flags += '-i "{}" '.format(str(FILENAME))
-			if(END != "False"):
-				flags += '-t {} '.format(END - START)
+			if(args.start != 0):
+				flags += '-ss {} '.format(str(args.start))
+			flags += '-i "{}" '.format(str(args.filename))
+			if(args.end != "False"):
+				flags += '-t {} '.format(args.end - args.start)
 		else:
 			print("Converting image sequence to video.")
 
-		flags += '-c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'.format(str(DESTINATION))
+		flags += '-c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'.format(str(args.destination))
 		
 		system('ffmpeg ' + flags)
 		
@@ -444,7 +428,7 @@ def full():
 
 	print("Finished!")
 
-if (TEST == 1):
+if (args.test == 1):
 	testRender()
 else:
 	full()
