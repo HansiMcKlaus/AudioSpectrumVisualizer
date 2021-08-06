@@ -9,8 +9,7 @@ Dependencies: numpy, audio2numpy, matplotlib, ffmpeg
 """
 
 """
-TODO: Push video into own method
-TODO: Chunking
+TODO: Chunking (methods renderFrames and saveImageSequence need to be merged)
 TODO: Check if file exists
 TODO: Optional linear interpolation for bin calculation if bin acces only one point in array
 TODO: x-axis and y-axis log scaling
@@ -71,16 +70,16 @@ parser.add_argument("-sy", "--smoothY", type=str, default="0",
 					help="Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0")
 
 parser.add_argument("-s", "--start", type=float, default=-1,
-					help="Begins render at <start> seconds. If start=False: Renders from the start of the sound file. Default: False")
+					help="Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1")
 
 parser.add_argument("-e", "--end", type=float, default=-1,
-					help="Ends render at <end> seconds. If end=False: Renders to the end of the sound file. Default: False")
+					help="Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1")
 
 parser.add_argument("-fs", "--frequencyStart", type=float, default=-1,
-					help="Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=False: Starts at 0Hz. Default: False")
+					help="Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=-1: Starts at 0Hz. Default: -1")
 
 parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
-					help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=False: Ends at highest frequency. Default: False")
+					help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1")
 
 parser.add_argument("-t", "--test", action='store_true', default=False,
 					help="Renders only a single frame for style testing. Default: False")
@@ -102,6 +101,7 @@ if(args.disableSmoothing == True):
 	args.smoothT = 0
 	args.smoothY = 0
 
+# Cleans up bad inputs and processes arguments to variables that cannot be calculated independently
 def processArgs():
 	fileData, samplerate = open_audio(args.filename)
 	channels = len(fileData.shape)
@@ -204,22 +204,22 @@ def processArgs():
 	else:
 		args.smoothY = int(args.smoothY)
 
-	if(args.start == -1 or args.test == 1):			# Begins render at <start> seconds. If start=False: Renders from the start of the sound file. Default: False
+	if(args.start == -1 or args.test == 1):			# Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1
 		args.start = 0
 	else:
 		args.start = float(args.start)
 
-	if(args.end == -1 or args.test == 1):			# Ends render at <end> seconds. If end=False: Renders to the end of the sound file. Default: False
+	if(args.end == -1 or args.test == 1):			# Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1
 		args.end = len(fileData)/samplerate
 	else:
 		args.end = float(args.end)
 
-	if(args.frequencyStart == -1):					# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=False: Starts at 0Hz. Default: False
+	if(args.frequencyStart == -1):					# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=-1: Starts at 0Hz. Default: -1
 		args.frequencyStart = 0
 	else:
 		args.frequencyStart = float(args.frequencyStart)
 
-	if(args.frequencyEnd == -1):					# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=False: Ends at highest frequency. Default: False
+	if(args.frequencyEnd == -1):					# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1
 		args.frequencyEnd = samplerate/2
 	else:
 		args.frequencyEnd = float(args.frequencyEnd)
@@ -393,6 +393,28 @@ def testRender():
 
 
 """
+Creates a video from an image sequence.
+"""
+def createVideo():
+	flags = '-hide_banner -loglevel error '
+	flags += '-r {} '.format(str(args.framerate))
+	flags += '-i "{}/%0d.png" '.format(str(args.destination))
+	if args.videoAudio:
+		print("Converting image sequence to video (with audio).")
+		if(args.start != 0):
+			flags += '-ss {} '.format(str(args.start))
+		flags += '-i "{}" '.format(str(args.filename))
+		if(args.end != "False"):
+			flags += '-t {} '.format(args.end - args.start)
+	else:
+		print("Converting image sequence to video.")
+
+	flags += '-c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'.format(str(args.destination))
+	
+	system('ffmpeg ' + flags)
+
+
+"""
 Main method. Initializes the complete process from start to finish.
 """
 def full():
@@ -427,24 +449,8 @@ def full():
 	processTime = time() - startTime
 	print("Created and saved Image Sequence in " + str(format(processTime, ".3f")) + " seconds.")
 
-	if args.videoAudio or args.video:
-		flags = '-hide_banner -loglevel error '
-		flags += '-r {} '.format(str(args.framerate))
-		flags += '-i "{}/%0d.png" '.format(str(args.destination))
-		if args.videoAudio:
-			print("Converting image sequence to video (with audio).")
-			if(args.start != 0):
-				flags += '-ss {} '.format(str(args.start))
-			flags += '-i "{}" '.format(str(args.filename))
-			if(args.end != "False"):
-				flags += '-t {} '.format(args.end - args.start)
-		else:
-			print("Converting image sequence to video.")
-
-		flags += '-c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'.format(str(args.destination))
-		
-		system('ffmpeg ' + flags)
-		
+	if(args.videoAudio or args.video):
+		createVideo()
 		processTime = time() - startTime
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
 
