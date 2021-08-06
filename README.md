@@ -30,15 +30,15 @@ Example for when audio and destination directory are not in the same directory a
 
 `-b, --bins` Amount of bins (bars, points, etc). Default: 64
 
-`-ht, --height` Height of the image. Default: 540px
+`-ht, --height` Height of the image in px. Default: 540
 
-`-w, --width` Width of the image. Will be overwritten if both bin_width AND bin_spacing is given! Default: 1920px
+`-w, --width` Width of the image in px. Will be overwritten if both bin_width AND bin_spacing is given! Default: 1920
 
-` -bw, --bin_width` Width of the bins. Default: auto (5/6 * width/bins)
+` -bw, --bin_width` Width of the bins in px. Default: auto (5/6 * width/bins)
 
-`-bs, --bin_spacing` Spacing between bins. Default: auto (1/6 * width/bins)
+`-bs, --bin_spacing` Spacing between bins in px. Default: auto (1/6 * width/bins)
 
-`-fr, --framerate` Framerate of the image sequence (Frames per second). Default: 30fps
+`-fr, --framerate` Framerate of the image sequence (Frames per second). Default: 30
 
 `-xlog` Scales the X-axis logarithmically to a given base. Default: 1 (Linear Scaling)
 
@@ -46,13 +46,13 @@ Example for when audio and destination directory are not in the same directory a
 
 `-sy, --smoothY` Smoothing over past/next \<smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
 
-`-s, --start` Begins render at \<start> seconds. If start=False: Renders from the start of the sound file. Default: False
+`-s, --start` Begins render at \<start> seconds. If start = -1: Renders from the start of the sound file. Default: -1
 
-`-e, --end` Ends render at \<end> seconds. If end=False: Renders to the end of the sound file. Default: False
+`-e, --end` Ends render at \<end> seconds. If end = -1: Renders to the end of the sound file. Default: -1
 
-`-fs, --frequencyStart` Limits the range of frequencies to \<frequencyStart>Hz and onward. If frequencyStart=False: Starts at 0Hz. Default: False
+`-fs, --frequencyStart` Limits the range of frequencies to \<frequencyStart>Hz and onward. If frequencyStart = -1: Starts at 0Hz. Default: -1
 
-`-fe, --frequencyEnd` Limits the range of frequencies to \<frequencyEnd>Hz. If frequencyEnd=False: Ends at highest frequency. Default: False
+`-fe, --frequencyEnd` Limits the range of frequencies to \<frequencyEnd>Hz. If frequencyEnd = -1: Ends at highest frequency. Default: -1
 
 `-v, --video` Additionally creates a video (.mp4) from image sequence. Default: False"
 
