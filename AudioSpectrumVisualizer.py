@@ -9,7 +9,7 @@ Dependencies: numpy, audio2numpy, matplotlib, ffmpeg
 """
 
 """
-TODO: Change False to -1 in start/end, fs/fe
+TODO: Push video into own method
 TODO: Chunking
 TODO: Check if file exists
 TODO: Optional linear interpolation for bin calculation if bin acces only one point in array
@@ -70,16 +70,16 @@ parser.add_argument("-st", "--smoothT", type=str, default="0",
 parser.add_argument("-sy", "--smoothY", type=str, default="0",
 					help="Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0")
 
-parser.add_argument("-s", "--start", type=str, default="False",
+parser.add_argument("-s", "--start", type=float, default=-1,
 					help="Begins render at <start> seconds. If start=False: Renders from the start of the sound file. Default: False")
 
-parser.add_argument("-e", "--end", type=str, default="False",
+parser.add_argument("-e", "--end", type=float, default=-1,
 					help="Ends render at <end> seconds. If end=False: Renders to the end of the sound file. Default: False")
 
-parser.add_argument("-fs", "--frequencyStart", type=str, default="False",
+parser.add_argument("-fs", "--frequencyStart", type=float, default=-1,
 					help="Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=False: Starts at 0Hz. Default: False")
 
-parser.add_argument("-fe", "--frequencyEnd", type=str, default="False",
+parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 					help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=False: Ends at highest frequency. Default: False")
 
 parser.add_argument("-t", "--test", action='store_true', default=False,
@@ -138,44 +138,44 @@ def processArgs():
 		while(int(args.smoothY) < 0):
 			args.smoothY = int(input("Smoothing scalar for smoothing in frame must be 0 or bigger. New Smoothing scalar: "))
 
-	if(args.start != "False"):
+	if(args.start != -1):
 		while(float(args.start) < 0):
 			args.start = float(input("Start time must be 0 or later. New start time: "))
 
-	if(args.end != "False"):
+	if(args.end != -1):
 		while(float(args.end) <= 0):
 			args.end = float(input("End time must be later than 0. New end time: "))
 
-	if(args.start != "False"):
+	if(args.start != -1):
 		while(float(args.start) >= len(fileData)/samplerate):
 			args.start = float(input("Start time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s. New start time (-1 to set start time at audio start): "))
 
-	if(args.end != "False"):
+	if(args.end != -1):
 		while(float(args.end) > len(fileData)/samplerate):
 			args.end = float(input("End time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s. New end time (-1 to set end time at audio end): "))
 
-	if(args.start != "False" and args.end != "False"):
+	if(args.start != -1 and args.end != -1):
 		while(float(args.start) >= float(args.end)):
 			args.start = float(input("Start time must predate end time. New start time: "))
 			args.end = float(input("End time must postdate start time. New end time: "))
 
-	if(args.frequencyStart != "False"):
+	if(args.frequencyStart != -1):
 		while(float(args.frequencyStart) < 0):
 			args.frequencyStart = float(input("Frequency start must be 0 or higher. New start frequency: "))
 
-	if(args.frequencyEnd != "False"):
+	if(args.frequencyEnd != -1):
 		while(float(args.frequencyEnd) <= 0):
 			args.frequencyEnd = float(input("Frequency end must be higher than 0. New end frequency: "))
 
-	if(args.frequencyStart != "False"):
+	if(args.frequencyStart != -1):
 		while(float(args.frequencyStart) >= samplerate/2):
 			args.frequencyStart = float(input("Frequency start exceeds max frequency of " + str(int(samplerate/2)) + "Hz. New start frequency (-1 to set frequency start at lowest frequency): "))
 
-	if(args.frequencyEnd != "False"):
+	if(args.frequencyEnd != -1):
 		while(float(args.frequencyEnd) > samplerate/2):
 			args.frequencyEnd = float(input("Frequency end exceeds max frequency of " + str(int(samplerate/2)) + "Hz. New end frequency (-1 to set frequency end at highest frequency): "))
 
-	if(args.frequencyStart != "False" and args.frequencyEnd != "False"):
+	if(args.frequencyStart != -1 and args.frequencyEnd != -1):
 		while(float(args.frequencyStart) >= float(args.frequencyEnd)):
 			args.frequencyStart = float(input("Frequency start must be lower than frequency end. New start frequency: "))
 			args.frequencyEnd = float(input("Frequency end must be higher than frequency start. New end frequency: "))
@@ -204,23 +204,23 @@ def processArgs():
 	else:
 		args.smoothY = int(args.smoothY)
 
-	if(args.start == "False" or args.test == 1):	# Begins render at <start> seconds. If start=False: Renders from the start of the sound file. Default: False
+	if(args.start == -1 or args.test == 1):			# Begins render at <start> seconds. If start=False: Renders from the start of the sound file. Default: False
 		args.start = 0
 	else:
 		args.start = float(args.start)
 
-	if(args.end == "False" or args.test == 1):		# Ends render at <end> seconds. If end=False: Renders to the end of the sound file. Default: False
-		args.end = "False"
+	if(args.end == -1 or args.test == 1):			# Ends render at <end> seconds. If end=False: Renders to the end of the sound file. Default: False
+		args.end = len(fileData)/samplerate
 	else:
 		args.end = float(args.end)
 
-	if(args.frequencyStart == "False"):				# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=False: Starts at 0Hz. Default: False
+	if(args.frequencyStart == -1):					# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=False: Starts at 0Hz. Default: False
 		args.frequencyStart = 0
 	else:
 		args.frequencyStart = float(args.frequencyStart)
 
-	if(args.frequencyEnd == "False"):				# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=False: Ends at highest frequency. Default: False
-		args.frequencyEnd = "False"
+	if(args.frequencyEnd == -1):					# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=False: Ends at highest frequency. Default: False
+		args.frequencyEnd = samplerate/2
 	else:
 		args.frequencyEnd = float(args.frequencyEnd)
 
@@ -245,10 +245,7 @@ def calculateFrameData(samplerate, fileData):
 	frameCounter = 0
 
 	# Slices fileData to start and end point
-	if(args.end == "False"):
-		fileData = fileData[int(args.start*samplerate):]
-	else:
-		fileData = fileData[int(args.start*samplerate):int(args.end*samplerate)]
+	fileData = fileData[int(args.start*samplerate):int(args.end*samplerate)]
 
 	# Splits Data into frames
 	stepSize = samplerate/args.framerate
@@ -265,10 +262,7 @@ def calculateFrameData(samplerate, fileData):
 		#frameData.append([frameDataAmplitudes, frameDataFrequencies])
 
 	# Slices frameDataAmplitudes to only contain the amplitudes between startFrequency and endFrequency
-		if(args.frequencyEnd == "False"):
-			frameDataAmplitudes = frameDataAmplitudes[int(args.frequencyStart/samplerate*len(frameDataAmplitudes)):]
-		else:
-			frameDataAmplitudes = frameDataAmplitudes[int(args.frequencyStart/samplerate*len(frameDataAmplitudes)):int(args.frequencyEnd/samplerate*len(frameDataAmplitudes))]
+		frameDataAmplitudes = frameDataAmplitudes[int(args.frequencyStart/(samplerate/2)*len(frameDataAmplitudes)):int(args.frequencyEnd/(samplerate/2)*len(frameDataAmplitudes))]
 
 		frameData.append(frameDataAmplitudes)
 		frameCounter += 1
@@ -294,7 +288,7 @@ def smoothFrameData(frameData):
 			frameDataSmoothed.append(np.mean(frameData[:i+args.smoothT+1], axis=0))
 		elif(i >= len(frameData)-args.smoothT):			# Last n frame data
 			frameDataSmoothed.append(np.mean(frameData[i-args.smoothT:], axis=0))
-		else:										# Normal Case
+		else:											# Normal Case
 			frameDataSmoothed.append(np.mean(frameData[i-args.smoothT:i+args.smoothT+1], axis=0))
 
 	return frameDataSmoothed
@@ -313,7 +307,7 @@ def createBins(frameData):
 			dataStart = int(((i*len(data)/args.bins)/len(data))**args.xlog * len(data))
 			dataEnd = int((((i+1)*len(data)/args.bins)/len(data))**args.xlog * len(data))
 			if (dataEnd == dataStart):
-				dataEnd += 1						# Ensures [dataStart:dataEnd] does not result NaN
+				dataEnd += 1							# Ensures [dataStart:dataEnd] does not result NaN
 			frameBins.append(np.mean(data[dataStart:dataEnd]))
 		bins.append(frameBins)
 
@@ -332,7 +326,7 @@ def smoothBinData(bins):
 				smoothedBinData.append(np.mean(frameBinData[:i+args.smoothY+1]))
 			elif(i >= len(frameBinData)-args.smoothY):	# Last n bins
 				smoothedBinData.append(np.mean(frameBinData[i-args.smoothY:]))
-			else:									# Normal Case
+			else:										# Normal Case
 				smoothedBinData.append(np.mean(frameBinData[i-args.smoothY:i+args.smoothY+1]))
 		binsSmoothed.append(smoothedBinData)
 
