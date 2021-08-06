@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 @author: Maik Simke
-Co-author: Jannick Kremer, Jonas Bögle
+Co-authors: Jannick Kremer, Jonas Bögle
 
 Creates a customizable image sequence for the spectrum of an audio file.
 
@@ -46,19 +46,19 @@ parser.add_argument("-b", "--bins", type=int, default=64,
 					help="Amount of bins (bars, points, etc). Default: 64")
 
 parser.add_argument("-ht", "--height", type=int, default=540,
-					help="Max height of the bins (height of the images). Default: 540px")
+					help="Height of the image in px. Default: 540")
 
 parser.add_argument("-w", "--width", type=int, default=1920,
-					help="Width of the image. Will be overwritten if both bin_width AND bin_spacing is given! Default: 1920px")
+					help="Width of the image in px. Will be overwritten if both bin_width AND bin_spacing is given! Default: 1920")
 
 parser.add_argument("-bw", "--bin_width", type=str, default="auto",
-					help="Width of the bins. Default: auto (5/6 * width/bins)")
+					help="Width of the bins in px. Default: auto (5/6 * width/bins)")
 
 parser.add_argument("-bs", "--bin_spacing", type=str, default="auto",
-					help="Spacing between bins. Default: auto (1/6 * width/bins)")
+					help="Spacing between bins in px. Default: auto (1/6 * width/bins)")
 
 parser.add_argument("-fr", "--framerate", type=float, default=30,
-					help="Framerate of the image sequence (Frames per second). Default: 30fps")
+					help="Framerate of the image sequence (Frames per second). Default: 30")
 
 parser.add_argument("-xlog", type=float, default=0,
 					help="Scales the X-axis logarithmically to a given base. Default: 0 (Linear)")
