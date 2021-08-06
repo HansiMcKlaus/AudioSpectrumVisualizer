@@ -96,14 +96,20 @@ parser.add_argument("-ds", "--disableSmoothing", action='store_true', default=Fa
 args = parser.parse_args()
 
 
-# Disable options
+# Disables options
 if(args.disableSmoothing == True):
 	args.smoothT = 0
 	args.smoothY = 0
 
-# Cleans up bad inputs and processes arguments to variables that cannot be calculated independently
-def processArgs():
+
+# Loads audio file
+def loadAudio():
 	fileData, samplerate = open_audio(args.filename)
+	return fileData, samplerate
+
+
+# Cleans up bad inputs and processes arguments that can not be calculated independently
+def processArgs(fileData, samplerate):
 	channels = len(fileData.shape)
 
 	# Clean up bad input
@@ -226,28 +232,20 @@ def processArgs():
 
 
 """
-Loads data and samplerate from <FILENAME>.
+Processes data from <FILENAME> and assigns data to its respective frame.
 """
-def loadAudio():
-	fileData, samplerate = open_audio(args.filename)
-	if(len(fileData.shape) == 2):					# Averages multiple channels into a mono channel
-		fileData = np.mean(fileData, axis=1)
-	return fileData, samplerate
-
-
-"""
-Assigns data from <FILENAME> to its respective frame.
-Example: samplerate: 44100, FRAMERATE:30 --> First frame consists of the first 44100/30 = 1470 samples.
-After Fourier Transformation: 1470/2 + 1 = 736 Samples
-"""
-def calculateFrameData(samplerate, fileData):
+def calculateFrameData(fileData, samplerate):
 	frameData = []
 	frameCounter = 0
+
+	# Averages multiple channels into a mono channel
+	if(len(fileData.shape) == 2):
+		fileData = np.mean(fileData, axis=1)
 
 	# Slices fileData to start and end point
 	fileData = fileData[int(args.start*samplerate):int(args.end*samplerate)]
 
-	# Splits Data into frames
+	# Splits data into frames
 	stepSize = samplerate/args.framerate
 	while (stepSize * frameCounter < len(fileData)):
 		frameDataStart = int(stepSize * frameCounter)
@@ -296,8 +294,6 @@ def smoothFrameData(frameData):
 
 """
 Creates the bins for every frame. A bin contains an amplitude that will later be represented as the height of a bar, point, line, etc. on the frame.
-Example: 736 amplitudes over 64 bins --> Every bin contains the mean amplitude of 736/64 = 11.5 amplitudes per bin if set to linear (xlog = 1).
-Example: 736 amplitudes over 1080 bins --> Every bin contains the mean amplitude of 736/1080 = ~0.68 amplitudes per bin --> Some adjacent bins contain the same amplitude.
 """
 def createBins(frameData):
 	bins = []
@@ -350,9 +346,10 @@ def renderFrames(bins):
 
 	return frames
 
+
 """
 Creates directory named <DESTINATION> and exports the frames as a .png image sequence into it.
-Starts at "0.png" for first frame
+Starts at "0.png" for first frame.
 """
 def saveImageSequence(frames):
 	# Create destination folder
@@ -420,32 +417,28 @@ Main method. Initializes the complete process from start to finish.
 def full():
 	startTime = time()
 
-	processArgs()
-
 	fileData, samplerate = loadAudio()
 	print("Audio succesfully loaded. (1/4)")
 
-	frameData = calculateFrameData(samplerate, fileData)
+	processArgs(fileData, samplerate)
+
+	frameData = calculateFrameData(fileData, samplerate)
+	if(args.smoothT > 0):
+		frameData = smoothFrameData(frameData)
 	print("Frame data created. (2/4)")
 
-	if(args.smoothT > 0):
-		frameDataSmoothed = smoothFrameData(frameData)
-		frameData = frameDataSmoothed
-
 	bins = createBins(frameData)
-	print("Bins created. (3/4)")
-
 	if(args.smoothY > 0):
-		binsSmoothed = smoothBinData(bins)
-		bins = binsSmoothed
+		bins = smoothBinData(bins)
+	print("Bins created. (3/4)")
 
 	frames = renderFrames(bins)
 	print("Frames created. (4/4)")
 
 	print("Saving Image Sequence to: " + args.destination)
 	saveImageSequence(frames)
+	print()						# New line
 
-	print()
 	processTime = time() - startTime
 	print("Created and saved Image Sequence in " + str(format(processTime, ".3f")) + " seconds.")
 
