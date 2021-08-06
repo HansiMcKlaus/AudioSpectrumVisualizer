@@ -3,13 +3,13 @@
 @author: Maik Simke
 Co-author: Jannick Kremer, Jonas Bögle
 
-Creates an Image Sequence for the Spectrum of an Audio File.
+Creates a customizable image sequence for the spectrum of an audio file.
 
 Dependencies: numpy, audio2numpy, matplotlib, ffmpeg
 """
 
 """
-TODO: Check Input after loading file and change start/end, fs/fe
+TODO: Change False to -1 in start/end, fs/fe
 TODO: Chunking
 TODO: Check if file exists
 TODO: Optional linear interpolation for bin calculation if bin acces only one point in array
@@ -86,10 +86,10 @@ parser.add_argument("-t", "--test", action='store_true', default=False,
 					help="Renders only a single frame for style testing. Default: False")
 
 parser.add_argument("-v", "--video", action='store_true', default=False,
-					help="Additionaly creates a video (.mp4) from image sequence. Default: False")
+					help="Additionally creates a video (.mp4) from image sequence. Default: False")
 
 parser.add_argument("-va", "--videoAudio", action='store_true', default=False,
-					help="Additionaly creates a video (.mp4) from image sequence and audio. Default: False")
+					help="Additionally creates a video (.mp4) from image sequence and audio. Default: False")
 
 parser.add_argument("-ds", "--disableSmoothing", action='store_true', default=False,
 					help="Disables all smoothing (smoothT and smoothY). Default: False")
@@ -102,101 +102,127 @@ if(args.disableSmoothing == True):
 	args.smoothT = 0
 	args.smoothY = 0
 
+def processArgs():
+	fileData, samplerate = open_audio(args.filename)
+	channels = len(fileData.shape)
 
-# Clean up bad input
-while(args.bins <= 0):
-	args.bins = int(input("Must have at least one bin. New amount of bins: "))
+	# Clean up bad input
+	while(args.bins <= 0):
+		args.bins = int(input("Must have at least one bin. New amount of bins: "))
 
-while(args.height <= 0):
-	args.height = int(input("Height must be at least 1px. New height: "))
+	while(args.height <= 0):
+		args.height = int(input("Height must be at least 1px. New height: "))
 
-while(args.width <= 0):
-	args.width = int(input("Width must be at least 1px. New width: "))
+	while(args.width <= 0):
+		args.width = int(input("Width must be at least 1px. New width: "))
 
-while(args.framerate <= 0):
-	args.framerate = float(input("Framerate must be at least 1. New framerate: "))
+	while(args.framerate <= 0):
+		args.framerate = float(input("Framerate must be at least 1. New framerate: "))
 
-while(args.xlog <= 0):
-	args.xlog = float(input("Scalar must be bigger than 0. New Scalar: "))
+	while(args.xlog <= 0):
+		args.xlog = float(input("Scalar must be bigger than 0. New Scalar: "))
 
-if(args.bin_width != "auto"):
-	while(float(args.bin_width) < 1):
-		args.bin_width = float(input("Bin width must be at least 1px. New bin width: "))
+	if(args.bin_width != "auto"):
+		while(float(args.bin_width) < 1):
+			args.bin_width = float(input("Bin width must be at least 1px. New bin width: "))
 
-if(args.bin_spacing != "auto"):
-	while(float(args.bin_spacing) < 0):
-		args.bin_spacing = float(input("Bin spacing must be 0px or higher. New bin width: "))
+	if(args.bin_spacing != "auto"):
+		while(float(args.bin_spacing) < 0):
+			args.bin_spacing = float(input("Bin spacing must be 0px or higher. New bin width: "))
 
-if(args.smoothT != "auto"):
-	while(int(args.smoothT) < 0):
-		args.smoothT = int(input("Smoothing scalar for smoothing between frames must be 0 or bigger. New Smoothing scalar: "))
+	if(args.smoothT != "auto"):
+		while(int(args.smoothT) < 0):
+			args.smoothT = int(input("Smoothing scalar for smoothing between frames must be 0 or bigger. New Smoothing scalar: "))
 
-if(args.smoothY != "auto"):
-	while(int(args.smoothY) < 0):
-		args.smoothY = int(input("Smoothing scalar for smoothing in frame must be 0 or bigger. New Smoothing scalar: "))
+	if(args.smoothY != "auto"):
+		while(int(args.smoothY) < 0):
+			args.smoothY = int(input("Smoothing scalar for smoothing in frame must be 0 or bigger. New Smoothing scalar: "))
 
-if(args.end != "False"):
-	while(float(args.end) <= 0):
-		args.end = float(input("End time must be later than 0. New end time: "))
+	if(args.start != "False"):
+		while(float(args.start) < 0):
+			args.start = float(input("Start time must be 0 or later. New start time: "))
 
-if(args.start != "False" and args.end != "False"):
-	while(float(args.start) >= float(args.end)):
-		args.start = float(input("Start time must predate end time. New start time: "))
-		args.end = float(input("End time must postdate start time. New end time: "))
+	if(args.end != "False"):
+		while(float(args.end) <= 0):
+			args.end = float(input("End time must be later than 0. New end time: "))
 
-if(args.frequencyEnd != "False"):
-	while(float(args.frequencyEnd) <= 0):
-		args.frequencyEnd = float(input("Frequency end must be higher than 0. New end frequency: "))
+	if(args.start != "False"):
+		while(float(args.start) >= len(fileData)/samplerate):
+			args.start = float(input("Start time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s. New start time (-1 to set start time at audio start): "))
 
-if(args.frequencyStart != "False" and args.frequencyEnd != "False"):
-	while(float(args.frequencyStart) >= float(args.frequencyEnd)):
-		args.frequencyStart = float(input("Frequency start must be lower than frequency end. New start frequency: "))
-		args.frequencyEnd = float(input("Frequency end must be higher than frequency start. New end frequency: "))
+	if(args.end != "False"):
+		while(float(args.end) > len(fileData)/samplerate):
+			args.end = float(input("End time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s. New end time (-1 to set end time at audio end): "))
 
+	if(args.start != "False" and args.end != "False"):
+		while(float(args.start) >= float(args.end)):
+			args.start = float(input("Start time must predate end time. New start time: "))
+			args.end = float(input("End time must postdate start time. New end time: "))
 
-# Process optional arguments:
-if(args.bin_width == "auto" and args.bin_spacing != "auto"):		# Only bin_spacing is given
-	args.bin_width = args.width/args.bins - float(args.bin_spacing)
-	args.bin_spacing = float(args.bin_spacing)
-elif(args.bin_width != "auto" and args.bin_spacing == "auto"):		# Only bin_width is given
-	args.bin_width = float(args.bin_width)
-	args.bin_spacing = args.width/args.bins - float(args.bin_width)
-elif(args.bin_width == "auto" and args.bin_spacing == "auto"):		# Neither is given
-	args.bin_width = args.width/args.bins * (5/6)
-	args.bin_spacing = args.width/args.bins * (1/6)
-else:																# Both are given (Overwrites width)
-	args.bin_width = float(args.bin_width)
-	args.bin_spacing = float(args.bin_spacing)
+	if(args.frequencyStart != "False"):
+		while(float(args.frequencyStart) < 0):
+			args.frequencyStart = float(input("Frequency start must be 0 or higher. New start frequency: "))
 
-if(args.smoothT == "auto"):							# Smoothing over past/next <smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0
-	args.smoothT = int(args.framerate/15)
-else:
-	args.smoothT = int(args.smoothT)
+	if(args.frequencyEnd != "False"):
+		while(float(args.frequencyEnd) <= 0):
+			args.frequencyEnd = float(input("Frequency end must be higher than 0. New end frequency: "))
 
-if(args.smoothY == "auto"):							# Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
-	args.smoothY = int(args.bins/32)
-else:
-	args.smoothY = int(args.smoothY)
+	if(args.frequencyStart != "False"):
+		while(float(args.frequencyStart) >= samplerate/2):
+			args.frequencyStart = float(input("Frequency start exceeds max frequency of " + str(int(samplerate/2)) + "Hz. New start frequency (-1 to set frequency start at lowest frequency): "))
 
-if(args.start == "False" or args.test == 1):		# Begins render at <start> seconds. If start=False: Renders from the start of the sound file. Default: False
-	args.start = 0
-else:
-	args.start = float(args.start)
+	if(args.frequencyEnd != "False"):
+		while(float(args.frequencyEnd) > samplerate/2):
+			args.frequencyEnd = float(input("Frequency end exceeds max frequency of " + str(int(samplerate/2)) + "Hz. New end frequency (-1 to set frequency end at highest frequency): "))
 
-if(args.end == "False" or args.test == 1):			# Ends render at <end> seconds. If end=False: Renders to the end of the sound file. Default: False
-	args.end = "False"
-else:
-	args.end = float(args.end)
+	if(args.frequencyStart != "False" and args.frequencyEnd != "False"):
+		while(float(args.frequencyStart) >= float(args.frequencyEnd)):
+			args.frequencyStart = float(input("Frequency start must be lower than frequency end. New start frequency: "))
+			args.frequencyEnd = float(input("Frequency end must be higher than frequency start. New end frequency: "))
 
-if(args.frequencyStart == "False"):					# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=False: Starts at 0Hz. Default: False
-	args.frequencyStart = 0
-else:
-	args.frequencyStart = float(args.frequencyStart)
+	# Process optional arguments:
+	if(args.bin_width == "auto" and args.bin_spacing != "auto"):		# Only bin_spacing is given
+		args.bin_width = args.width/args.bins - float(args.bin_spacing)
+		args.bin_spacing = float(args.bin_spacing)
+	elif(args.bin_width != "auto" and args.bin_spacing == "auto"):		# Only bin_width is given
+		args.bin_width = float(args.bin_width)
+		args.bin_spacing = args.width/args.bins - float(args.bin_width)
+	elif(args.bin_width == "auto" and args.bin_spacing == "auto"):		# Neither is given
+		args.bin_width = args.width/args.bins * (5/6)
+		args.bin_spacing = args.width/args.bins * (1/6)
+	else:																# Both are given (Overwrites width)
+		args.bin_width = float(args.bin_width)
+		args.bin_spacing = float(args.bin_spacing)
 
-if(args.frequencyEnd == "False"):					# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=False: Ends at highest frequency. Default: False
-	args.frequencyEnd = "False"
-else:
-	args.frequencyEnd = float(args.frequencyEnd)
+	if(args.smoothT == "auto"):						# Smoothing over past/next <smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0
+		args.smoothT = int(args.framerate/15)
+	else:
+		args.smoothT = int(args.smoothT)
+
+	if(args.smoothY == "auto"):						# Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
+		args.smoothY = int(args.bins/32)
+	else:
+		args.smoothY = int(args.smoothY)
+
+	if(args.start == "False" or args.test == 1):	# Begins render at <start> seconds. If start=False: Renders from the start of the sound file. Default: False
+		args.start = 0
+	else:
+		args.start = float(args.start)
+
+	if(args.end == "False" or args.test == 1):		# Ends render at <end> seconds. If end=False: Renders to the end of the sound file. Default: False
+		args.end = "False"
+	else:
+		args.end = float(args.end)
+
+	if(args.frequencyStart == "False"):				# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=False: Starts at 0Hz. Default: False
+		args.frequencyStart = 0
+	else:
+		args.frequencyStart = float(args.frequencyStart)
+
+	if(args.frequencyEnd == "False"):				# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=False: Ends at highest frequency. Default: False
+		args.frequencyEnd = "False"
+	else:
+		args.frequencyEnd = float(args.frequencyEnd)
 
 
 """
@@ -377,6 +403,8 @@ Main method. Initializes the complete process from start to finish.
 """
 def full():
 	startTime = time()
+
+	processArgs()
 
 	fileData, samplerate = loadAudio()
 	print("Audio succesfully loaded. (1/4)")
