@@ -48,11 +48,11 @@ Example for when audio and destination directory are not in the same directory a
 
 `-sy, --smoothY` Smoothing over past/next \<smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
 
-`-s, --start` Begins render at \<start> seconds. If start = -1: Renders from the start of the sound file. Default: -1
+`-s, --start` Begins render at \<start> seconds. Default: 0
 
 `-e, --end` Ends render at \<end> seconds. If end = -1: Renders to the end of the sound file. Default: -1
 
-`-fs, --frequencyStart` Limits the range of frequencies to \<frequencyStart>Hz and onward. If frequencyStart = -1: Starts at 0Hz. Default: -1
+`-fs, --frequencyStart` Limits the range of frequencies to \<frequencyStart>Hz and onward. Default: 0
 
 `-fe, --frequencyEnd` Limits the range of frequencies to \<frequencyEnd>Hz. If frequencyEnd = -1: Ends at highest frequency. Default: -1
 
@@ -76,8 +76,8 @@ Currently only a white bar chart, however more will be added at a later date!
 
 Default: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder>`
 
-<img src=".\screenshots\default.png" alt="default" style="zoom: 50%;" />
+<img src="screenshots/default.png" alt="default" style="zoom: 50%;" />
 
 Slim bins: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 128 -bw 5`
 
-<img src=".\screenshots\slimBins.png" alt="default" style="zoom: 50%;" />
+<img src="screenshots/slimBins.png" alt="default" style="zoom: 50%;" />

@@ -27,6 +27,7 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 from os import mkdir, path, system
+from sys import exit
 from joblib import Parallel, delayed
 
 
@@ -70,14 +71,14 @@ parser.add_argument("-st", "--smoothT", type=str, default="0",
 parser.add_argument("-sy", "--smoothY", type=str, default="0",
 					help="Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0")
 
-parser.add_argument("-s", "--start", type=float, default=-1,
-					help="Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1")
+parser.add_argument("-s", "--start", type=float, default=0,
+					help="Begins render at <start> seconds. Default: 0")
 
 parser.add_argument("-e", "--end", type=float, default=-1,
 					help="Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1")
 
-parser.add_argument("-fs", "--frequencyStart", type=float, default=-1,
-					help="Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=-1: Starts at 0Hz. Default: -1")
+parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
+					help="Limits the range of frequencies to <frequencyStart>Hz and onward. Default: -1")
 
 parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 					help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1")
@@ -97,92 +98,90 @@ parser.add_argument("-ds", "--disableSmoothing", action='store_true', default=Fa
 args = parser.parse_args()
 
 
-# Loads audio file
+# Loads audio file.
 def loadAudio():
 	fileData, samplerate = open_audio(args.filename)
 	return fileData, samplerate
 
 
-# Cleans up bad inputs and processes arguments that can not be calculated independently
+# Exit on invalid inputs and processes arguments that can not be calculated independently.
 def processArgs(fileData, samplerate):
 	channels = len(fileData.shape)
 
 	# Clean up bad input
-	while(args.bins <= 0):
-		args.bins = int(input("Must have at least one bin. New amount of bins: "))
+	if(args.bins <= 0):
+		exit("Must have at least one bin.")
 
-	while(args.height <= 0):
-		args.height = int(input("Height must be at least 1px. New height: "))
+	if(args.height <= 0):
+		exit("Height must be at least 1px.")
 
-	while(args.width <= 0):
-		args.width = int(input("Width must be at least 1px. New width: "))
+	if(args.width <= 0):
+		exit("Width must be at least 1px.")
 
-	while(args.framerate <= 0):
-		args.framerate = float(input("Framerate must be at least 1. New framerate: "))
+	if(args.framerate <= 0):
+		exit("Framerate must be at least 1.")
 
-	while(args.xlog < 0):
-		args.xlog = float(input("Scalar must not be smaller than 0. New Scalar: "))
+	if(args.xlog < 0):
+		exit("Scalar for xlog must not be smaller than 0.")
 
-	while(args.ylog < 0):
-		args.ylog = float(input("Scalar must not be smaller than 0. New Scalar: "))
+	if(args.ylog < 0):
+		exit("Scalar for ylog must not be smaller than 0.")
 
 	if(args.bin_width != "auto"):
-		while(float(args.bin_width) < 1):
-			args.bin_width = float(input("Bin width must be at least 1px. New bin width: "))
+		if(float(args.bin_width) < 1):
+			exit("Bin width must be at least 1px.")
 
 	if(args.bin_spacing != "auto"):
-		while(float(args.bin_spacing) < 0):
-			args.bin_spacing = float(input("Bin spacing must be 0px or higher. New bin width: "))
+		if(float(args.bin_spacing) < 0):
+			exit("Bin spacing must be 0px or higher")
 
 	if(args.smoothT != "auto"):
-		while(int(args.smoothT) < 0):
-			args.smoothT = int(input("Smoothing scalar for smoothing between frames must be 0 or bigger. New Smoothing scalar: "))
+		if(int(args.smoothT) < 0):
+			exit("Smoothing scalar for smoothing between frames must be 0 or higher.")
 
 	if(args.smoothY != "auto"):
-		while(int(args.smoothY) < 0):
-			args.smoothY = int(input("Smoothing scalar for smoothing in frame must be 0 or bigger. New Smoothing scalar: "))
+		if(int(args.smoothY) < 0):
+			exit("Smoothing scalar for smoothing in frame must be 0 or higher.")
 
-	if(args.start != -1):
-		while(float(args.start) < 0):
-			args.start = float(input("Start time must be 0 or later. New start time: "))
-
-	if(args.end != -1):
-		while(float(args.end) <= 0):
-			args.end = float(input("End time must be later than 0. New end time: "))
-
-	if(args.start != -1):
-		while(float(args.start) >= len(fileData)/samplerate):
-			args.start = float(input("Start time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s. New start time (-1 to set start time at audio start): "))
+	if(args.start != 0):
+		if(float(args.start) < 0):
+			exit("Start time must be 0 or later.")
 
 	if(args.end != -1):
-		while(float(args.end) > len(fileData)/samplerate):
-			args.end = float(input("End time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s. New end time (-1 to set end time at audio end): "))
+		if(float(args.end) <= 0):
+			exit("End time must be later than 0.")
 
-	if(args.start != -1 and args.end != -1):
-		while(float(args.start) >= float(args.end)):
-			args.start = float(input("Start time must predate end time. New start time: "))
-			args.end = float(input("End time must postdate start time. New end time: "))
+	if(args.start != 0):
+		if(float(args.start) >= len(fileData)/samplerate):
+			exit("Start time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
 
-	if(args.frequencyStart != -1):
-		while(float(args.frequencyStart) < 0):
-			args.frequencyStart = float(input("Frequency start must be 0 or higher. New start frequency: "))
+	if(args.end != -1):
+		if(float(args.end) > len(fileData)/samplerate):
+			exit("End time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
+
+	if(args.start != 0 and args.end != -1):
+		if(float(args.start) >= float(args.end)):
+			exit("Start time must predate end time.")
+
+	if(args.frequencyStart != 0):
+		if(float(args.frequencyStart) < 0):
+			exit("Frequency start must be 0 or higher.")
 
 	if(args.frequencyEnd != -1):
-		while(float(args.frequencyEnd) <= 0):
-			args.frequencyEnd = float(input("Frequency end must be higher than 0. New end frequency: "))
+		if(float(args.frequencyEnd) <= 0):
+			exit("Frequency end must be higher than 0.")
 
-	if(args.frequencyStart != -1):
-		while(float(args.frequencyStart) >= samplerate/2):
-			args.frequencyStart = float(input("Frequency start exceeds max frequency of " + str(int(samplerate/2)) + "Hz. New start frequency (-1 to set frequency start at lowest frequency): "))
+	if(args.frequencyStart != 0):
+		if(float(args.frequencyStart) >= samplerate/2):
+			exit("Frequency start exceeds max frequency of " + str(int(samplerate/2)) + "Hz.")
 
 	if(args.frequencyEnd != -1):
-		while(float(args.frequencyEnd) > samplerate/2):
-			args.frequencyEnd = float(input("Frequency end exceeds max frequency of " + str(int(samplerate/2)) + "Hz. New end frequency (-1 to set frequency end at highest frequency): "))
+		if(float(args.frequencyEnd) > samplerate/2):
+			exit("Frequency end exceeds max frequency of " + str(int(samplerate/2)) + "Hz.")
 
-	if(args.frequencyStart != -1 and args.frequencyEnd != -1):
-		while(float(args.frequencyStart) >= float(args.frequencyEnd)):
-			args.frequencyStart = float(input("Frequency start must be lower than frequency end. New start frequency: "))
-			args.frequencyEnd = float(input("Frequency end must be higher than frequency start. New end frequency: "))
+	if(args.frequencyStart != 0 and args.frequencyEnd != -1):
+		if(float(args.frequencyStart) >= float(args.frequencyEnd)):
+			exit("Frequency start must be lower than frequency end.")
 
 	# Process optional arguments:
 	if(args.disableSmoothing == True):
@@ -212,7 +211,7 @@ def processArgs(fileData, samplerate):
 	else:
 		args.smoothY = int(args.smoothY)
 
-	if(args.start == -1 or args.test == 1):			# Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1
+	if(args.start == 0 or args.test == 1):			# Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1
 		args.start = 0
 	else:
 		args.start = float(args.start)
@@ -222,7 +221,7 @@ def processArgs(fileData, samplerate):
 	else:
 		args.end = float(args.end)
 
-	if(args.frequencyStart == -1):					# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=-1: Starts at 0Hz. Default: -1
+	if(args.frequencyStart == 0):					# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=-1: Starts at 0Hz. Default: -1
 		args.frequencyStart = 0
 	else:
 		args.frequencyStart = float(args.frequencyStart)
@@ -428,9 +427,8 @@ def full():
 	startTime = time()
 
 	fileData, samplerate = loadAudio()
-	print("Audio succesfully loaded. (1/4)")
-
 	processArgs(fileData, samplerate)
+	print("Audio succesfully loaded. (1/4)")
 
 	frameData = calculateFrameData(fileData, samplerate)
 	if(args.smoothT > 0):
