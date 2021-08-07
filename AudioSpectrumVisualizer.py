@@ -38,7 +38,7 @@ parser = argparse.ArgumentParser(description="Creates an image sequence for the 
 # Required positional arguments
 parser.add_argument("filename", type=str,
 					help="Name or path of the audio file")
-parser.add_argument("destination", type=str, nargs='?', default="Image Sequence",
+parser.add_argument("destination", type=str, nargs='?', default="imageSequence",
 					help="Name or path of the created directory in which the image sequence is saved. Default: Image Sequence")
 
 # Optional arguments
@@ -97,12 +97,6 @@ parser.add_argument("-ds", "--disableSmoothing", action='store_true', default=Fa
 					help="Disables all smoothing (smoothT and smoothY). Default: False")
 
 args = parser.parse_args()
-
-
-# Disables options
-if(args.disableSmoothing == True):
-	args.smoothT = 0
-	args.smoothY = 0
 
 
 # Loads audio file
@@ -193,6 +187,10 @@ def processArgs(fileData, samplerate):
 			args.frequencyEnd = float(input("Frequency end must be higher than frequency start. New end frequency: "))
 
 	# Process optional arguments:
+	if(args.disableSmoothing == True):
+		args.smoothT = 0
+		args.smoothY = 0
+
 	if(args.bin_width == "auto" and args.bin_spacing != "auto"):		# Only bin_spacing is given
 		args.bin_width = args.width/args.bins - float(args.bin_spacing)
 		args.bin_spacing = float(args.bin_spacing)
@@ -354,7 +352,7 @@ def renderFrames(bins):
 			if (args.ylog == 0):
 				binHeight = np.ceil(bins[j, k] * frame.shape[0])
 			else:
-				binHeight = np.ceil(np.log2(args.ylog * bins[j, k] + 1) * frame.shape[0])
+				binHeight = np.ceil(np.log2(args.ylog * bins[j, k] + 1)/np.log2(args.ylog + 1) * frame.shape[0])
 			frame[int(0):int(binHeight),
 				int(k*args.bin_width + k*args.bin_spacing):int((k+1)*args.bin_width + k*args.bin_spacing)] = 1
 		frame = np.flipud(frame)
@@ -378,6 +376,7 @@ def saveImageSequence(frames):
 		plt.imsave(str(args.destination) + "/" + str(frameCounter) + ".png", frame, cmap='gray')
 		frameCounter += 1
 		printProgressBar(frameCounter, len(frames))
+	print()											# New line
 
 
 """
@@ -453,7 +452,6 @@ def full():
 
 	print("Saving Image Sequence to: " + args.destination)
 	saveImageSequence(frames)
-	print()						# New line
 
 	processTime = time() - startTime
 	print("Created and saved Image Sequence in " + str(format(processTime, ".3f")) + " seconds.")
