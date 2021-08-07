@@ -11,8 +11,6 @@ Dependencies: numpy, audio2numpy, matplotlib, ffmpeg
 """
 TODO: Chunking (methods renderFrames and saveImageSequence need to be merged)
 TODO: Check if file exists
-TODO: Optional linear interpolation for bin calculation if bin acces only one point in array
-TODO: x-axis and y-axis log scaling
 TODO: Implement different styles
 		Styles:
 			Bar: Filled, Blocks, Centered on y-axis
@@ -259,10 +257,6 @@ def calculateFrameData(fileData, samplerate):
 		currentFrameData = fileData[int(frameDataStart):int(frameDataEnd)]
 		frameDataAmplitudes = abs(np.fft.rfft(currentFrameData))
 
-	# Fourier Transformation (Frequencies)
-		#frameDataFrequencies = np.fft.rfftfreq(len(currentFrameData), 1/samplerate)
-		#frameData.append([frameDataAmplitudes, frameDataFrequencies])
-
 	# Slices frameDataAmplitudes to only contain the amplitudes between startFrequency and endFrequency
 		frameDataAmplitudes = frameDataAmplitudes[int(args.frequencyStart/(samplerate/2)*len(frameDataAmplitudes)):int(args.frequencyEnd/(samplerate/2)*len(frameDataAmplitudes))]
 
@@ -308,10 +302,8 @@ def createBins(frameData):
 				dataStart = int(i*len(data)/args.bins)
 				dataEnd = int((i+1)*len(data)/args.bins)
 			else:
-				#dataStart = int((i/args.bins))
-				#dataEnd = 
-				dataStart = int(((i*len(data)/args.bins)/len(data))**args.xlog * len(data))
-				dataEnd = int((((i+1)*len(data)/args.bins)/len(data))**args.xlog * len(data))
+				dataStart = int((i/args.bins)**args.xlog * len(data))
+				dataEnd = int(((i+1)/args.bins)**args.xlog * len(data))
 			if (dataEnd == dataStart):
 				dataEnd += 1							# Ensures [dataStart:dataEnd] does not result NaN
 			frameBins.append(np.mean(data[dataStart:dataEnd]))
@@ -343,16 +335,17 @@ def smoothBinData(bins):
 Renders frames from bin data.
 """
 def renderFrames(bins):
-	bins = bins/np.max(bins)						# Normalize vector length to [0,1]
+	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
 	frames = []
 	for j in range(len(bins)):
 		frame = np.zeros((args.height, int(args.bins*(args.bin_width+args.bin_spacing))))
-		# frame = frame.astype(np.uint8)			# Set datatype to uint8 to reduce RAM usage (Doesn't work)
+		# frame = frame.astype(np.uint8)				# Set datatype to uint8 to reduce RAM usage (Doesn't work)
+		div = np.log2(args.ylog + 1)
 		for k in range(args.bins):
 			if (args.ylog == 0):
 				binHeight = np.ceil(bins[j, k] * frame.shape[0])
 			else:
-				binHeight = np.ceil(np.log2(args.ylog * bins[j, k] + 1)/np.log2(args.ylog + 1) * frame.shape[0])
+				binHeight = np.ceil(np.log2(args.ylog * bins[j, k] + 1)/div * frame.shape[0])
 			frame[int(0):int(binHeight),
 				int(k*args.bin_width + k*args.bin_spacing):int((k+1)*args.bin_width + k*args.bin_spacing)] = 1
 		frame = np.flipud(frame)
@@ -360,6 +353,8 @@ def renderFrames(bins):
 
 	return frames
 
+# log_2(a * x + 1) / log_2(a + 1)
+# = log_a+1(x + 1)
 
 """
 Creates directory named <DESTINATION> and exports the frames as a .png image sequence into it.
@@ -376,7 +371,7 @@ def saveImageSequence(frames):
 		plt.imsave(str(args.destination) + "/" + str(frameCounter) + ".png", frame, cmap='gray')
 		frameCounter += 1
 		printProgressBar(frameCounter, len(frames))
-	print()											# New line
+	print()												# New line
 
 
 """
