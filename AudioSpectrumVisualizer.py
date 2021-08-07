@@ -10,15 +10,13 @@ Dependencies: numpy, audio2numpy, matplotlib, ffmpeg
 
 """
 TODO: Chunking (methods renderFrames and saveImageSequence need to be merged)
-TODO: Check if file exists
+TODO: Implement color
 TODO: Implement different styles
 		Styles:
 			Bar: Filled, Blocks, Centered on y-axis
 			Points: Shapes
 			Line: Thicknes
 			Filled
-TODO: Implement color
-TODO: Implement channel selection
 """
 
 import argparse
@@ -59,11 +57,14 @@ parser.add_argument("-bs", "--bin_spacing", type=str, default="auto",
 parser.add_argument("-fr", "--framerate", type=float, default=30,
 					help="Framerate of the image sequence (Frames per second). Default: 30")
 
+parser.add_argument("-ch", "--channel", type=str, default="average",
+					help="Which channel to use (left, right, average). Default: average")
+
 parser.add_argument("-xlog", type=float, default=0,
-					help="Scales the X-axis logarithmically to a given base. Default: 0 (Linear)")
+					help="Scales the X-axis logarithmically to a given base. Default: 0 (linear)")
 
 parser.add_argument("-ylog", type=float, default=0,
-					help="Scales the Y-axis logarithmically to a given base. Default: 0 (Linear)")
+					help="Scales the Y-axis logarithmically to a given base. Default: 0 (linear)")
 
 parser.add_argument("-st", "--smoothT", type=str, default="0",
 					help="Smoothing over past/next <smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0")
@@ -101,7 +102,7 @@ args = parser.parse_args()
 # Loads audio file.
 def loadAudio():
 	if(path.isfile(args.filename) == False):
-		exit("Path to file does not exists.")
+		exit("Path to file does not exist.")
 
 	fileData, samplerate = open_audio(args.filename)
 	return fileData, samplerate
@@ -123,6 +124,9 @@ def processArgs(fileData, samplerate):
 
 	if(args.framerate <= 0):
 		exit("Framerate must be at least 1.")
+
+	if(args.channel != "left" and args.channel != "right" and args.channel != "average"):
+		exit("Invalid channel. Valid channels: left, right, average.")
 
 	if(args.xlog < 0):
 		exit("Scalar for xlog must not be smaller than 0.")
@@ -244,7 +248,12 @@ def calculateFrameData(fileData, samplerate):
 
 	# Averages multiple channels into a mono channel
 	if(len(fileData.shape) == 2):
-		fileData = np.mean(fileData, axis=1)
+		if(args.channel == "average"):
+			fileData = np.mean(fileData, axis=1)
+		elif(args.channel == "left"):
+			fileData = fileData[:,0]
+		elif(args.channel == "right"):
+			fileData = fileData[:,1]
 
 	# Slices fileData to start and end point
 	fileData = fileData[int(args.start*samplerate):int(args.end*samplerate)]
@@ -306,7 +315,7 @@ def createBins(frameData):
 			else:
 				dataStart = int((i/args.bins)**args.xlog * len(data))
 				dataEnd = int(((i+1)/args.bins)**args.xlog * len(data))
-			if (dataEnd == dataStart):
+			if(dataEnd == dataStart):
 				dataEnd += 1							# Ensures [dataStart:dataEnd] does not result NaN
 			frameBins.append(np.mean(data[dataStart:dataEnd]))
 		bins.append(frameBins)
@@ -344,7 +353,7 @@ def renderFrames(bins):
 		# frame = frame.astype(np.uint8)				# Set datatype to uint8 to reduce RAM usage (Doesn't work)
 		div = np.log2(args.ylog + 1)
 		for k in range(args.bins):
-			if (args.ylog == 0):
+			if(args.ylog == 0):
 				binHeight = np.ceil(bins[j, k] * frame.shape[0])
 			else:
 				binHeight = np.ceil(np.log2(args.ylog * bins[j, k] + 1)/div * frame.shape[0])
@@ -364,7 +373,7 @@ Starts at "0.png" for first frame.
 """
 def saveImageSequence(frames):
 	# Create destination folder
-	if not path.exists(args.destination):
+	if(path.exists(args.destination) == False):
 		mkdir(args.destination)
 	
 	# Save image sequence
@@ -408,7 +417,7 @@ def createVideo():
 	flags = '-hide_banner -loglevel error '
 	flags += '-r {} '.format(str(args.framerate))
 	flags += '-i "{}/%0d.png" '.format(str(args.destination))
-	if args.videoAudio:
+	if(args.videoAudio == True):
 		print("Converting image sequence to video (with audio).")
 		if(args.start != 0):
 			flags += '-ss {} '.format(str(args.start))
@@ -459,7 +468,7 @@ def full():
 
 	print("Finished!")
 
-if (args.test == 1):
+if(args.test == 1):
 	testRender()
 else:
 	full()
