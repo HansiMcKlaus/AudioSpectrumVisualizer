@@ -100,6 +100,9 @@ args = parser.parse_args()
 
 # Loads audio file.
 def loadAudio():
+	if(path.isfile(args.filename) == False):
+		exit("Path to file does not exists.")
+
 	fileData, samplerate = open_audio(args.filename)
 	return fileData, samplerate
 
@@ -108,7 +111,7 @@ def loadAudio():
 def processArgs(fileData, samplerate):
 	channels = len(fileData.shape)
 
-	# Clean up bad input
+	# Exit on invalid input
 	if(args.bins <= 0):
 		exit("Must have at least one bin.")
 
