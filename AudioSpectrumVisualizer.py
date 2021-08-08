@@ -9,7 +9,7 @@ Dependencies: numpy, audio2numpy, matplotlib, ffmpeg
 """
 
 """
-TODO: Chunking (methods renderFrames and saveImageSequence need to be merged)
+TODO: Fix testRender
 TODO: Implement color
 TODO: Implement different styles
 		Styles:
@@ -373,7 +373,7 @@ def renderSaveFrames(bins):
 
 		# Saves frames and clears up unused memory in chunks
 		if(len(frames) >= args.chunkSize or j+1 == len(bins)):
-			saveImageSequence(frames, (chunkCounter * args.chunkSize), len(bins))
+			saveImageSequence(frames, int(chunkCounter * args.chunkSize), len(bins))
 			chunkCounter += 1
 			frames = []
 
@@ -386,7 +386,7 @@ def saveImageSequence(frames, start, length):
 	# Create destination folder
 	if(path.exists(args.destination) == False):
 		mkdir(args.destination)
-	
+
 	# Save image sequence
 	frameCounter = start
 	for frame in frames:
@@ -413,7 +413,7 @@ Renders a single frame from testData (00:11:000 to 00:11:033 of "Bursty Greedy S
 def testRender():
 	testData = np.load("testData.npy")
 	args.start = 0
-	args.end = "False"
+	args.end = -1
 
 	frameData = calculateFrameData(44100, testData)
 	bins = createBins(frameData)
@@ -434,13 +434,13 @@ def createVideo():
 		if(args.start != 0):
 			flags += '-ss {} '.format(str(args.start))
 		flags += '-i "{}" '.format(str(args.filename))
-		if(args.end != "False"):
+		if(args.end != -1):
 			flags += '-t {} '.format(args.end - args.start)
 	else:
 		print("Converting image sequence to video.")
 
 	flags += '-c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'.format(str(args.destination))
-	
+
 	system('ffmpeg ' + flags)
 
 
