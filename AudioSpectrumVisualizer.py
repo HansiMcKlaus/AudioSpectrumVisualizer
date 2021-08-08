@@ -26,7 +26,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from os import mkdir, path, system
 from sys import exit
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, cpu_count
 
 
 # Instantiate the parser
@@ -353,11 +353,29 @@ Renders frames from bin data.
 """
 def renderSaveFrames(bins):
 	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
-	frames = []
-	chunkCounter = 0
+	args.chunkSize = int(args.chunkSize/cpu_count())
+	numChunks = int(np.ceil(len(bins)/args.chunkSize))
 
-	# Renders frame
-	for j in range(len(bins)):
+	# Create destination folder
+	if(path.exists(args.destination) == False):
+		mkdir(args.destination)
+
+	Parallel(n_jobs=-1)(delayed(renderSaveChunk)(bins, j) for j in range(numChunks))
+
+	print()												# New line after progress bar
+
+def renderSaveChunk(bins, chunkNum):
+	start = chunkNum*args.chunkSize
+	end = (chunkNum+1)*args.chunkSize
+	if(end > len(bins)):
+		end = len(bins)
+	frames = renderChunkFrames(bins, start, end)
+	saveChunkImages(frames, start, len(bins))
+
+
+def renderChunkFrames(bins, start, end):
+	frames = []
+	for j in range(start, end):
 		frame = np.zeros((args.height, int(args.bins*(args.bin_width+args.bin_spacing))))
 		# frame = frame.astype(np.uint8)				# Set datatype to uint8 to reduce RAM usage (Doesn't work)
 		div = np.log2(args.ylog + 1)
@@ -370,32 +388,24 @@ def renderSaveFrames(bins):
 				int(k*args.bin_width + k*args.bin_spacing):int((k+1)*args.bin_width + k*args.bin_spacing)] = 1
 		frame = np.flipud(frame)
 		frames.append(frame)
-
-		# Saves frames and clears up unused memory in chunks
-		if(len(frames) >= args.chunkSize or j+1 == len(bins)):
-			saveImageSequence(frames, int(chunkCounter * args.chunkSize), len(bins))
-			chunkCounter += 1
-			frames = []
-
+	return frames
 
 """
 Creates directory named <DESTINATION> and exports the frames as a .png image sequence into it.
 Starts at "0.png" for first frame.
 """
-def saveImageSequence(frames, start, length):
-	# Create destination folder
-	if(path.exists(args.destination) == False):
-		mkdir(args.destination)
-
+def saveChunkImages(frames, start, length):
 	# Save image sequence
-	frameCounter = start
-	for frame in frames:
-		plt.imsave(str(args.destination) + "/" + str(frameCounter) + ".png", frame, cmap='gray')
-		frameCounter += 1
-		printProgressBar(frameCounter, length)
-	if(frameCounter == length):
-		print()											# New line after progress bar
+	for i in range(len(frames)):
+		plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], cmap='gray')
+		printProgressBar(start + i, length)
+	#Parallel(n_jobs=1)(delayed(saveFrame)(frames[i], start + i, length) for i in range(len(frames)))
 
+"""
+def saveFrame(frame, frame_count, num_frames):
+	plt.imsave(str(args.destination) + "/" + str(frame_count) + ".png", frame, cmap='gray')
+	printProgressBar(frame_count + 1, num_frames)
+"""
 
 """
 Progress Bar (Modified from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
