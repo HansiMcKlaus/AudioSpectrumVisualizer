@@ -84,6 +84,9 @@ parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
 parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 					help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1")
 
+parser.add_argument("-cs", "--chunkSize", type=int, default=128,
+					help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64")
+
 parser.add_argument("-t", "--test", action='store_true', default=False,
 					help="Renders only a single frame for style testing. Default: False")
 
@@ -190,8 +193,11 @@ def processArgs(fileData, samplerate):
 		if(float(args.frequencyStart) >= float(args.frequencyEnd)):
 			exit("Frequency start must be lower than frequency end.")
 
+	if(args.chunkSize <= 0):
+		exit("Chunk size must be at least 1.")
+
 	# Process optional arguments:
-	if(args.disableSmoothing == True):
+	if(args.disableSmoothing):
 		args.smoothT = 0
 		args.smoothY = 0
 
@@ -345,9 +351,12 @@ def smoothBinData(bins):
 """
 Renders frames from bin data.
 """
-def renderFrames(bins):
+def renderSaveFrames(bins):
 	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
 	frames = []
+	chunkCounter = 0
+
+	# Renders frame
 	for j in range(len(bins)):
 		frame = np.zeros((args.height, int(args.bins*(args.bin_width+args.bin_spacing))))
 		# frame = frame.astype(np.uint8)				# Set datatype to uint8 to reduce RAM usage (Doesn't work)
@@ -362,27 +371,30 @@ def renderFrames(bins):
 		frame = np.flipud(frame)
 		frames.append(frame)
 
-	return frames
+		# Saves frames and clears up unused memory in chunks
+		if(len(frames) >= args.chunkSize or j+1 == len(bins)):
+			saveImageSequence(frames, (chunkCounter * args.chunkSize), len(bins))
+			chunkCounter += 1
+			frames = []
 
-# log_2(a * x + 1) / log_2(a + 1)
-# = log_a+1(x + 1)
 
 """
 Creates directory named <DESTINATION> and exports the frames as a .png image sequence into it.
 Starts at "0.png" for first frame.
 """
-def saveImageSequence(frames):
+def saveImageSequence(frames, start, length):
 	# Create destination folder
 	if(path.exists(args.destination) == False):
 		mkdir(args.destination)
 	
 	# Save image sequence
-	frameCounter = 0
+	frameCounter = start
 	for frame in frames:
 		plt.imsave(str(args.destination) + "/" + str(frameCounter) + ".png", frame, cmap='gray')
 		frameCounter += 1
-		printProgressBar(frameCounter, len(frames))
-	print()												# New line
+		printProgressBar(frameCounter, length)
+	if(frameCounter == length):
+		print()											# New line after progress bar
 
 
 """
@@ -417,7 +429,7 @@ def createVideo():
 	flags = '-hide_banner -loglevel error '
 	flags += '-r {} '.format(str(args.framerate))
 	flags += '-i "{}/%0d.png" '.format(str(args.destination))
-	if(args.videoAudio == True):
+	if(args.videoAudio):
 		print("Converting image sequence to video (with audio).")
 		if(args.start != 0):
 			flags += '-ss {} '.format(str(args.start))
@@ -445,18 +457,18 @@ def full():
 	frameData = calculateFrameData(fileData, samplerate)
 	if(args.smoothT > 0):
 		frameData = smoothFrameData(frameData)
+	del fileData, samplerate
 	print("Frame data created. (2/4)")
 
 	bins = createBins(frameData)
 	if(args.smoothY > 0):
 		bins = smoothBinData(bins)
+	del frameData
 	print("Bins created. (3/4)")
 
-	frames = renderFrames(bins)
-	print("Frames created. (4/4)")
-
-	print("Saving Image Sequence to: " + args.destination)
-	saveImageSequence(frames)
+	print("Creating and saving image sequence. (4/4)")
+	renderSaveFrames(bins)
+	del bins
 
 	processTime = time() - startTime
 	print("Created and saved Image Sequence in " + str(format(processTime, ".3f")) + " seconds.")
@@ -468,7 +480,7 @@ def full():
 
 	print("Finished!")
 
-if(args.test == 1):
+if(args.test):
 	testRender()
 else:
 	full()

@@ -40,6 +40,8 @@ Example for when audio and destination directory are not in the same directory a
 
 `-fr, --framerate` Framerate of the image sequence (Frames per second). Default: 30
 
+`-ch, --channel` Which channel to use (left, right, average). Default: average
+
 `-xlog` Scales the X-axis logarithmically to a given base. Default: 0 (Linear)
 
 `-ylog` Scales the Y-axis logarithmically to a given base. Default: 0 (Linear)
@@ -55,6 +57,8 @@ Example for when audio and destination directory are not in the same directory a
 `-fs, --frequencyStart` Limits the range of frequencies to \<frequencyStart>Hz and onward. Default: 0
 
 `-fe, --frequencyEnd` Limits the range of frequencies to \<frequencyEnd>Hz. If frequencyEnd = -1: Ends at highest frequency. Default: -1
+
+`-cs, --chunkSize` Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64
 
 `-v, --video` Additionally creates a video (.mp4) from image sequence. Default: False"
 
