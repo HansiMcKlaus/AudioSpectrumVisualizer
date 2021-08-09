@@ -357,7 +357,7 @@ def renderSaveFrames(bins):
 	frames = []
 	chunkCounter = 0
 
-	# Renders frame
+	# Renders frames
 	for j in range(len(bins)):
 		frame = np.zeros((args.height, int(args.bins*(args.bin_width+args.bin_spacing))))
 		frame = frame.astype(np.uint8)					# Set datatype to uint8 to reduce RAM usage
@@ -371,8 +371,12 @@ def renderSaveFrames(bins):
 		frame = np.flipud(frame)
 		frames.append(frame)
 
+		# Ends render after a single frame for testing
+		if(args.test):
+			return frames[0]
+
 		# Saves frames and clears up unused memory in chunks
-		if(len(frames) >= args.chunkSize or j+1 == len(bins)):
+		if(len(frames) >= args.chunkSize or j+1 == len(bins) and not args.test):
 			saveImageSequence(frames, int(chunkCounter * args.chunkSize), len(bins))
 			chunkCounter += 1
 			frames = []
@@ -411,14 +415,17 @@ def printProgressBar (iteration, total, prefix = "Progress:", suffix = "Complete
 Renders a single frame from testData (00:11:000 to 00:11:033 of "Bursty Greedy Spider" by Konomi Suzuki) for style testing.
 """
 def testRender():
+	fileData, samplerate = loadAudio()
+	processArgs(fileData, samplerate)
+
 	testData = np.load("testData.npy")
 	args.start = 0
-	args.end = -1
+	args.end = 1/args.framerate
 
-	frameData = calculateFrameData(44100, testData)
+	frameData = calculateFrameData(testData, 44100)
 	bins = createBins(frameData)
-	frames = renderFrames(bins)
-	plt.imsave("testFrame.png", frames[0], cmap='gray')
+	testFrame = renderSaveFrames(bins)
+	plt.imsave("testFrame.png", testFrame, cmap='gray')
 	print("Created Frame for Style Testing in current directory.")
 
 
