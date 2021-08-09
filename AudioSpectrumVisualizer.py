@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 from os import mkdir, path, system
 from sys import exit
 from joblib import Parallel, delayed, cpu_count
+from multiprocessing import Manager
 
 
 # Instantiate the parser
@@ -360,17 +361,20 @@ def renderSaveFrames(bins):
 	if(path.exists(args.destination) == False):
 		mkdir(args.destination)
 
-	Parallel(n_jobs=-1)(delayed(renderSaveChunk)(bins, j) for j in range(numChunks))
+	frameCounter = Manager().dict()
+	frameCounter['c'] = 0
+	Parallel(n_jobs=-1)(delayed(renderSaveChunk)(bins, j, frameCounter) for j in range(numChunks))
 
 	print()												# New line after progress bar
 
-def renderSaveChunk(bins, chunkNum):
+def renderSaveChunk(bins, chunkNum, frameCounter):
 	start = chunkNum*args.chunkSize
 	end = (chunkNum+1)*args.chunkSize
 	if(end > len(bins)):
 		end = len(bins)
+
 	frames = renderChunkFrames(bins, start, end)
-	saveChunkImages(frames, start, len(bins))
+	saveChunkImages(frames, start, len(bins), frameCounter)
 
 
 def renderChunkFrames(bins, start, end):
@@ -394,18 +398,13 @@ def renderChunkFrames(bins, start, end):
 Creates directory named <DESTINATION> and exports the frames as a .png image sequence into it.
 Starts at "0.png" for first frame.
 """
-def saveChunkImages(frames, start, length):
+def saveChunkImages(frames, start, length, frameCounter):
 	# Save image sequence
 	for i in range(len(frames)):
 		plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], cmap='gray')
-		printProgressBar(start + i, length)
-	#Parallel(n_jobs=1)(delayed(saveFrame)(frames[i], start + i, length) for i in range(len(frames)))
-
-"""
-def saveFrame(frame, frame_count, num_frames):
-	plt.imsave(str(args.destination) + "/" + str(frame_count) + ".png", frame, cmap='gray')
-	printProgressBar(frame_count + 1, num_frames)
-"""
+		#printProgressBar(start + i, length)
+		printProgressBar(frameCounter['c']+1, length)
+		frameCounter['c'] += 1
 
 """
 Progress Bar (Modified from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
