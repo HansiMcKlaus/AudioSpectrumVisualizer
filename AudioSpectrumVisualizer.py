@@ -489,7 +489,8 @@ def full():
 
 	print("Finished!")
 
-if(args.test):
-	testRender()
-else:
-	full()
+if __name__ == '__main__':
+	if(args.test):
+		testRender()
+	else:
+		full()
