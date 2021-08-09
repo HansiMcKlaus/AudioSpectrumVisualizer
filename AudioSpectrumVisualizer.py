@@ -84,7 +84,7 @@ parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
 parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 					help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1")
 
-parser.add_argument("-cs", "--chunkSize", type=int, default=128,
+parser.add_argument("-cs", "--chunkSize", type=int, default=64,
 					help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64")
 
 parser.add_argument("-t", "--test", action='store_true', default=False,
@@ -353,14 +353,14 @@ Renders frames from bin data.
 """
 def renderSaveFrames(bins):
 	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
+	div = np.log2(args.ylog + 1)						# Constant for y-scaling
 	frames = []
 	chunkCounter = 0
 
 	# Renders frame
 	for j in range(len(bins)):
 		frame = np.zeros((args.height, int(args.bins*(args.bin_width+args.bin_spacing))))
-		# frame = frame.astype(np.uint8)				# Set datatype to uint8 to reduce RAM usage (Doesn't work)
-		div = np.log2(args.ylog + 1)
+		frame = frame.astype(np.uint8)					# Set datatype to uint8 to reduce RAM usage
 		for k in range(args.bins):
 			if(args.ylog == 0):
 				binHeight = np.ceil(bins[j, k] * frame.shape[0])
