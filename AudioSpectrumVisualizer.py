@@ -29,6 +29,8 @@ from sys import exit
 from joblib import Parallel, delayed, cpu_count
 from multiprocessing import Manager
 
+DEFAULT_CHUNKSIZE = 128
+
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description="Creates an image sequence for the audio spectrum of an audio file.")
@@ -85,10 +87,10 @@ parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
 parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 					help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1")
 
-parser.add_argument("-cs", "--chunkSize", type=int, default=128,
+parser.add_argument("-cs", "--chunkSize", type=int, default=-1,
 					help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64")
 
-parser.add_argument("-c", "--cores", type=int, default=-1,
+parser.add_argument("-cr", "--cores", type=int, default=-1,
 					help="Amount of cores to use for rendering and export. WARNING: RAM usage scales with number of cores! Default: All cores")
 
 parser.add_argument("-t", "--test", action='store_true', default=False,
@@ -197,11 +199,11 @@ def processArgs(fileData, samplerate):
 		if(float(args.frequencyStart) >= float(args.frequencyEnd)):
 			exit("Frequency start must be lower than frequency end.")
 
-	if(args.chunkSize <= 0):
+	if(args.chunkSize == 0 or args.chunkSize < -1):
 		exit("Chunk size must be at least 1.")
 
-	if(args.cores == 0):
-		exit("Number of cores cannot be zero")
+	if(args.cores == 0 or args.cores < -1):
+		exit("Number of cores must be at least 1")
 
 	# Process optional arguments:
 	if(args.disableSmoothing):
@@ -250,6 +252,9 @@ def processArgs(fileData, samplerate):
 		args.frequencyEnd = samplerate/2
 	else:
 		args.frequencyEnd = float(args.frequencyEnd)
+
+	if(args.chunkSize == -1):
+		args.chunkSize = int(DEFAULT_CHUNKSIZE/cpu_count())
 
 
 """
@@ -361,8 +366,7 @@ Starts at "0.png" for first frame.
 """
 def renderSaveFrames(bins):
 	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
-	#args.chunkSize = int(args.chunkSize/cpu_count())
-	numChunks = int(np.ceil(len(bins)/args.chunkSize))
+	numChunks = int(np.ceil(len(bins)/args.chunkSize))	# Total number of chunks
 
 	# Create destination folder
 	if(path.exists(args.destination) == False):
@@ -372,14 +376,15 @@ def renderSaveFrames(bins):
 	frameCounter['c'] = 0
 	Parallel(n_jobs=args.cores)(delayed(renderSaveChunk)(bins, j, frameCounter) for j in range(numChunks))
 
+	printProgressBar(len(bins), len(bins))
 	print()												# New line after progress bar
 
 """
 Renders and exports one chunk worth of frames
 """
-def renderSaveChunk(bins, chunkNum, frameCounter):
-	start = chunkNum*args.chunkSize
-	end = (chunkNum+1)*args.chunkSize
+def renderSaveChunk(bins, chunkCounter, frameCounter):
+	start = chunkCounter*args.chunkSize
+	end = (chunkCounter+1)*args.chunkSize
 	if(end > len(bins)):
 		end = len(bins)
 
@@ -413,9 +418,8 @@ def saveChunkImages(frames, start, length, frameCounter):
 	# Save image sequence
 	for i in range(len(frames)):
 		plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], cmap='gray')
-		#printProgressBar(start + i, length)
-		printProgressBar(frameCounter['c']+1, length)
 		frameCounter['c'] += 1
+		printProgressBar(frameCounter['c'], length)
 
 """
 Progress Bar (Modified from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
