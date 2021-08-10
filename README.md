@@ -58,13 +58,20 @@ Example for when audio and destination directory are not in the same directory a
 
 `-fe, --frequencyEnd` Limits the range of frequencies to \<frequencyEnd>Hz. If frequencyEnd = -1: Ends at highest frequency. Default: -1
 
-`-cs, --chunkSize` Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64
-
 `-v, --video` Additionally creates a video (.mp4) from image sequence. Default: False"
 
 `-va, --videoAudio` Additionally creates a video (.mp4) from image sequence and audio. Default: False"
 
 `-ds, --disableSmoothing` Disables all smoothing (smoothT and smoothY). Default: False
+
+<br>
+
+`-cs, --chunkSize` Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: auto
+
+`-cr, --cores` Number of cores to use for rendering and export. Default: All cores
+
+RAM usage is proportional to the chunksize multiplied by the number of cores. Per default (auto) the chunksize is set to 128 divided by the number of cores. Ex. 128/4 = chunksize of 32 per core on a machine with 4 cores. You may want to increase the chunksize on a machine with many cores for better performance, as a larger chunksize per core increases speed.
+Warning: Setting the chunksize too high on a low amount of rendered frames may lead to bad load balancing, resulting in a slower export.
 
 
 

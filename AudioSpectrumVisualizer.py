@@ -25,7 +25,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from os import mkdir, path, system
 from sys import exit
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, cpu_count
+from multiprocessing import Manager
+
+DEFAULT_CHUNKSIZE = 128
 
 
 # Instantiate the parser
@@ -89,8 +92,11 @@ parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
 parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 					help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1")
 
-parser.add_argument("-cs", "--chunkSize", type=int, default=64,
+parser.add_argument("-cs", "--chunkSize", type=int, default=-1,
 					help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64")
+
+parser.add_argument("-cr", "--cores", type=int, default=-1,
+					help="Number of cores to use for rendering and export. Default: All cores")
 
 parser.add_argument("-t", "--test", action='store_true', default=False,
 					help="Renders only a single frame for style testing. Default: False")
@@ -198,8 +204,11 @@ def processArgs(fileData, samplerate):
 		if(float(args.frequencyStart) >= float(args.frequencyEnd)):
 			exit("Frequency start must be lower than frequency end.")
 
-	if(args.chunkSize <= 0):
+	if(args.chunkSize == 0 or args.chunkSize < -1):
 		exit("Chunk size must be at least 1.")
+
+	if(args.cores == 0 or args.cores < -1):
+		exit("Number of cores must be at least 1")
 
 	# Process optional arguments:
 	if(args.disableSmoothing):
@@ -292,6 +301,9 @@ def processArgs(fileData, samplerate):
 		args.frequencyEnd = samplerate/2
 	else:
 		args.frequencyEnd = float(args.frequencyEnd)
+
+	if(args.chunkSize == -1):
+		args.chunkSize = int(DEFAULT_CHUNKSIZE/cpu_count())
 
 
 """
@@ -398,16 +410,43 @@ def smoothBinData(bins):
 
 
 """
-Renders frames from bin data.
+Creates directory named <DESTINATION>, renders frames from bin data and exports them into it.
+Starts at "0.png" for first frame.
 """
 def renderSaveFrames(bins):
 	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
 	div = np.log2(args.ylog + 1)						# Constant for y-scaling
-	frames = []
-	chunkCounter = 0
+	numChunks = int(np.ceil(len(bins)/args.chunkSize))	# Total number of chunks
 
-	# Renders frames
-	for j in range(len(bins)):
+	# Create destination folder
+	if(path.exists(args.destination) == False):
+		mkdir(args.destination)
+
+	frameCounter = Manager().dict()
+	frameCounter['c'] = 0
+	Parallel(n_jobs=args.cores)(delayed(renderSaveChunk)(bins, j, frameCounter, div) for j in range(numChunks))
+
+	printProgressBar(len(bins), len(bins))
+	print()												# New line after progress bar
+
+"""
+Renders and exports one chunk worth of frames
+"""
+def renderSaveChunk(bins, chunkCounter, frameCounter, div):
+	start = chunkCounter*args.chunkSize
+	end = (chunkCounter+1)*args.chunkSize
+	if(end > len(bins)):
+		end = len(bins)
+
+	frames = renderChunkFrames(bins, start, end, div)
+	saveChunkImages(frames, start, len(bins), frameCounter)
+
+"""
+Renders one chunk of frames
+"""
+def renderChunkFrames(bins, start, end, div):
+	frames = []
+	for j in range(start, end):
 		frame = np.full((args.height, int(args.bins*(args.bin_width+args.bin_spacing)), 3), args.backgroundColor)
 		frame = frame.astype(np.uint8)					# Set datatype to uint8 to reduce RAM usage
 		for k in range(args.bins):
@@ -419,36 +458,17 @@ def renderSaveFrames(bins):
 				int(k*args.bin_width + k*args.bin_spacing):int((k+1)*args.bin_width + k*args.bin_spacing)] = args.color
 		frame = np.flipud(frame)
 		frames.append(frame)
-
-		# Ends render after a single frame for testing
-		if(args.test):
-			return frames[0]
-
-		# Saves frames and clears up unused memory in chunks
-		if(len(frames) >= args.chunkSize or j+1 == len(bins)):
-			saveImageSequence(frames, int(chunkCounter * args.chunkSize), len(bins))
-			chunkCounter += 1
-			frames = []
-
+	return frames
 
 """
-Creates directory named <DESTINATION> and exports the frames as a .png image sequence into it.
-Starts at "0.png" for first frame.
+Exports one chunk of frames as a .png image sequence into it.
 """
-def saveImageSequence(frames, start, length):
-	# Create destination folder
-	if(path.exists(args.destination) == False):
-		mkdir(args.destination)
-
+def saveChunkImages(frames, start, length, frameCounter):
 	# Save image sequence
-	frameCounter = start
-	for frame in frames:
-		plt.imsave(str(args.destination) + "/" + str(frameCounter) + ".png", frame, vmin=0, vmax=255, cmap='gray')
-		frameCounter += 1
-		printProgressBar(frameCounter, length)
-	if(frameCounter == length):
-		print()											# New line after progress bar
-
+	for i in range(len(frames)):
+		plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], vmin=0, vmax=255, cmap='gray')
+		frameCounter['c'] += 1
+		printProgressBar(frameCounter['c'], length)
 
 """
 Progress Bar (Modified from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
@@ -536,7 +556,8 @@ def full():
 
 	print("Finished!")
 
-if(args.test):
-	testRender()
-else:
-	full()
+if __name__ == '__main__':
+	if(args.test):
+		testRender()
+	else:
+		full()
