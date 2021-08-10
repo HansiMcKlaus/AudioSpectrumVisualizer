@@ -9,8 +9,7 @@ Dependencies: numpy, audio2numpy, matplotlib, ffmpeg
 """
 
 """
-TODO: Fix testRender
-TODO: Implement color
+TODO: Fix last frame
 TODO: Implement different styles
 		Styles:
 			Bar: Filled, Blocks, Centered on y-axis
@@ -57,6 +56,12 @@ parser.add_argument("-bw", "--bin_width", type=str, default="auto",
 parser.add_argument("-bs", "--bin_spacing", type=str, default="auto",
 					help="Spacing between bins in px. Default: auto (1/6 * width/bins)")
 
+parser.add_argument("-c", "--color", type=str, default="ffffff",
+					help="Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)")
+
+parser.add_argument("-bgc", "--backgroundColor", type=str, default="000000",
+					help="Color of the background. Ex: ff0000 or red. Default: 000000 (black)")
+
 parser.add_argument("-fr", "--framerate", type=float, default=30,
 					help="Framerate of the image sequence (Frames per second). Default: 30")
 
@@ -91,7 +96,7 @@ parser.add_argument("-cs", "--chunkSize", type=int, default=-1,
 					help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64")
 
 parser.add_argument("-cr", "--cores", type=int, default=-1,
-					help="Amount of cores to use for rendering and export. WARNING: RAM usage scales with number of cores! Default: All cores")
+					help="Number of cores to use for rendering and export. Default: All cores")
 
 parser.add_argument("-t", "--test", action='store_true', default=False,
 					help="Renders only a single frame for style testing. Default: False")
@@ -222,6 +227,50 @@ def processArgs(fileData, samplerate):
 	else:																# Both are given (Overwrites width)
 		args.bin_width = float(args.bin_width)
 		args.bin_spacing = float(args.bin_spacing)
+
+	if(args.color == "black"):
+		args.color = [0, 0, 0]
+	elif(args.color == "white"):
+		args.color = [255, 255, 255]
+	elif(args.color == "red"):
+		args.color = [255, 0, 0]
+	elif(args.color == "green"):
+		args.color = [0, 255, 0]
+	elif(args.color == "blue"):
+		args.color = [0, 0, 255]
+	elif(args.color == "yellow"):
+		args.color = [255, 255, 0]
+	elif(args.color == "cyan"):
+		args.color = [0, 255, 255]
+	elif(args.color == "magenta"):
+		args.color = [255, 0, 255]
+	else:																# Converts HEX to RGB
+		color = []
+		for i in (0, 2, 4):
+			color.append(int(args.color[i:i+2], 16))
+		args.color = color
+
+	if(args.backgroundColor == "black"):
+		args.backgroundColor = [0, 0, 0]
+	elif(args.backgroundColor == "white"):
+		args.backgroundColor = [255, 255, 255]
+	elif(args.backgroundColor == "red"):
+		args.backgroundColor = [255, 0, 0]
+	elif(args.backgroundColor == "green"):
+		args.backgroundColor = [0, 255, 0]
+	elif(args.backgroundColor == "blue"):
+		args.backgroundColor = [0, 0, 255]
+	elif(args.backgroundColor == "yellow"):
+		args.backgroundColor = [255, 255, 0]
+	elif(args.backgroundColor == "cyan"):
+		args.backgroundColor = [0, 255, 255]
+	elif(args.backgroundColor == "magenta"):
+		args.backgroundColor = [255, 0, 255]
+	else:																# Converts HEX to RGB
+		backgroundColor = []
+		for i in (0, 2, 4):
+			backgroundColor.append(int(args.backgroundColor[i:i+2], 16))
+		args.backgroundColor = backgroundColor
 
 	if(args.smoothT == "auto"):						# Smoothing over past/next <smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0
 		args.smoothT = int(args.framerate/15)
@@ -366,6 +415,7 @@ Starts at "0.png" for first frame.
 """
 def renderSaveFrames(bins):
 	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
+	div = np.log2(args.ylog + 1)						# Constant for y-scaling
 	numChunks = int(np.ceil(len(bins)/args.chunkSize))	# Total number of chunks
 
 	# Create destination folder
@@ -374,7 +424,7 @@ def renderSaveFrames(bins):
 
 	frameCounter = Manager().dict()
 	frameCounter['c'] = 0
-	Parallel(n_jobs=args.cores)(delayed(renderSaveChunk)(bins, j, frameCounter) for j in range(numChunks))
+	Parallel(n_jobs=args.cores)(delayed(renderSaveChunk)(bins, j, frameCounter, div) for j in range(numChunks))
 
 	printProgressBar(len(bins), len(bins))
 	print()												# New line after progress bar
@@ -382,31 +432,30 @@ def renderSaveFrames(bins):
 """
 Renders and exports one chunk worth of frames
 """
-def renderSaveChunk(bins, chunkCounter, frameCounter):
+def renderSaveChunk(bins, chunkCounter, frameCounter, div):
 	start = chunkCounter*args.chunkSize
 	end = (chunkCounter+1)*args.chunkSize
 	if(end > len(bins)):
 		end = len(bins)
 
-	frames = renderChunkFrames(bins, start, end)
+	frames = renderChunkFrames(bins, start, end, div)
 	saveChunkImages(frames, start, len(bins), frameCounter)
 
 """
 Renders one chunk of frames
 """
-def renderChunkFrames(bins, start, end):
+def renderChunkFrames(bins, start, end, div):
 	frames = []
 	for j in range(start, end):
-		frame = np.zeros((args.height, int(args.bins*(args.bin_width+args.bin_spacing))))
-		# frame = frame.astype(np.uint8)				# Set datatype to uint8 to reduce RAM usage (Doesn't work)
-		div = np.log2(args.ylog + 1)
+		frame = np.full((args.height, int(args.bins*(args.bin_width+args.bin_spacing)), 3), args.backgroundColor)
+		frame = frame.astype(np.uint8)					# Set datatype to uint8 to reduce RAM usage
 		for k in range(args.bins):
 			if(args.ylog == 0):
 				binHeight = np.ceil(bins[j, k] * frame.shape[0])
 			else:
 				binHeight = np.ceil(np.log2(args.ylog * bins[j, k] + 1)/div * frame.shape[0])
 			frame[int(0):int(binHeight),
-				int(k*args.bin_width + k*args.bin_spacing):int((k+1)*args.bin_width + k*args.bin_spacing)] = 1
+				int(k*args.bin_width + k*args.bin_spacing):int((k+1)*args.bin_width + k*args.bin_spacing)] = args.color
 		frame = np.flipud(frame)
 		frames.append(frame)
 	return frames
@@ -417,7 +466,7 @@ Exports one chunk of frames as a .png image sequence into it.
 def saveChunkImages(frames, start, length, frameCounter):
 	# Save image sequence
 	for i in range(len(frames)):
-		plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], cmap='gray')
+		plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], vmin=0, vmax=255, cmap='gray')
 		frameCounter['c'] += 1
 		printProgressBar(frameCounter['c'], length)
 
@@ -435,14 +484,17 @@ def printProgressBar (iteration, total, prefix = "Progress:", suffix = "Complete
 Renders a single frame from testData (00:11:000 to 00:11:033 of "Bursty Greedy Spider" by Konomi Suzuki) for style testing.
 """
 def testRender():
+	fileData, samplerate = loadAudio()
+	processArgs(fileData, samplerate)
+
 	testData = np.load("testData.npy")
 	args.start = 0
-	args.end = -1
+	args.end = 1/args.framerate
 
-	frameData = calculateFrameData(44100, testData)
+	frameData = calculateFrameData(testData, 44100)
 	bins = createBins(frameData)
-	frames = renderFrames(bins)
-	plt.imsave("testFrame.png", frames[0], cmap='gray')
+	testFrame = renderSaveFrames(bins)
+	plt.imsave("testFrame.png", testFrame, vmin=0, vmax=255, cmap='gray')
 	print("Created Frame for Style Testing in current directory.")
 
 
