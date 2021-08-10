@@ -38,10 +38,6 @@ Example for when audio and destination directory are not in the same directory a
 
 `-bs, --bin_spacing` Spacing between bins in px. Default: auto (1/6 * width/bins)
 
-`-c, --color` Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)
-
-`-bgc, --backgroundColor` Color of the background. Ex: ff0000 or red. Default: 000000 (black)
-
 `-fr, --framerate` Framerate of the image sequence (Frames per second). Default: 30
 
 `-ch, --channel` Which channel to use (left, right, average). Default: average
@@ -77,6 +73,10 @@ Example for when audio and destination directory are not in the same directory a
 Currently only a white bar chart, however more will be added at a later date!
 
 `-t, --test` Renders only a single frame for style testing. Default: False
+
+`-c, --color` Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)
+
+`-bgc, --backgroundColor` Color of the background. Ex: ff0000 or red. Default: 000000 (black)
 
 
 

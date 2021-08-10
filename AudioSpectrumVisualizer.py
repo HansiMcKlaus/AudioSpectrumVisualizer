@@ -474,7 +474,7 @@ def testRender():
 	frameData = calculateFrameData(testData, 44100)
 	bins = createBins(frameData)
 	testFrame = renderSaveFrames(bins)
-	plt.imsave("testFrame.png", testFrame, cmap='gray')
+	plt.imsave("testFrame.png", testFrame, vmin=0, vmax=255, cmap='gray')
 	print("Created Frame for Style Testing in current directory.")
 
 
