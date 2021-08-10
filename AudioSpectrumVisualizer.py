@@ -88,6 +88,9 @@ parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 parser.add_argument("-cs", "--chunkSize", type=int, default=128,
 					help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64")
 
+parser.add_argument("-c", "--cores", type=int, default=-1,
+					help="Amount of cores to use for rendering and export. WARNING: RAM usage scales with number of cores! Default: All cores")
+
 parser.add_argument("-t", "--test", action='store_true', default=False,
 					help="Renders only a single frame for style testing. Default: False")
 
@@ -196,6 +199,9 @@ def processArgs(fileData, samplerate):
 
 	if(args.chunkSize <= 0):
 		exit("Chunk size must be at least 1.")
+
+	if(args.cores == 0):
+		exit("Number of cores cannot be zero")
 
 	# Process optional arguments:
 	if(args.disableSmoothing):
@@ -350,11 +356,12 @@ def smoothBinData(bins):
 
 
 """
-Renders frames from bin data.
+Creates directory named <DESTINATION>, renders frames from bin data and exports them into it.
+Starts at "0.png" for first frame.
 """
 def renderSaveFrames(bins):
 	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
-	args.chunkSize = int(args.chunkSize/cpu_count())
+	#args.chunkSize = int(args.chunkSize/cpu_count())
 	numChunks = int(np.ceil(len(bins)/args.chunkSize))
 
 	# Create destination folder
@@ -363,10 +370,13 @@ def renderSaveFrames(bins):
 
 	frameCounter = Manager().dict()
 	frameCounter['c'] = 0
-	Parallel(n_jobs=-1)(delayed(renderSaveChunk)(bins, j, frameCounter) for j in range(numChunks))
+	Parallel(n_jobs=args.cores)(delayed(renderSaveChunk)(bins, j, frameCounter) for j in range(numChunks))
 
 	print()												# New line after progress bar
 
+"""
+Renders and exports one chunk worth of frames
+"""
 def renderSaveChunk(bins, chunkNum, frameCounter):
 	start = chunkNum*args.chunkSize
 	end = (chunkNum+1)*args.chunkSize
@@ -376,7 +386,9 @@ def renderSaveChunk(bins, chunkNum, frameCounter):
 	frames = renderChunkFrames(bins, start, end)
 	saveChunkImages(frames, start, len(bins), frameCounter)
 
-
+"""
+Renders one chunk of frames
+"""
 def renderChunkFrames(bins, start, end):
 	frames = []
 	for j in range(start, end):
@@ -395,8 +407,7 @@ def renderChunkFrames(bins, start, end):
 	return frames
 
 """
-Creates directory named <DESTINATION> and exports the frames as a .png image sequence into it.
-Starts at "0.png" for first frame.
+Exports one chunk of frames as a .png image sequence into it.
 """
 def saveChunkImages(frames, start, length, frameCounter):
 	# Save image sequence

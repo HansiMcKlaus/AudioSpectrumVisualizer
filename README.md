@@ -60,6 +60,8 @@ Example for when audio and destination directory are not in the same directory a
 
 `-cs, --chunkSize` Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64
 
+`-c, --cores` Amount of cores to use for rendering and export. WARNING: RAM usage scales with number of cores! Default: All cores
+
 `-v, --video` Additionally creates a video (.mp4) from image sequence. Default: False"
 
 `-va, --videoAudio` Additionally creates a video (.mp4) from image sequence and audio. Default: False"
