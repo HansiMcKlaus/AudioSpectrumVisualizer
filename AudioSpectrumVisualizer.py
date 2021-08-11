@@ -310,9 +310,6 @@ def processArgs(fileData, samplerate):
 Processes data from <FILENAME> and assigns data to its respective frame.
 """
 def calculateFrameData(fileData, samplerate):
-	frameData = []
-	frameCounter = 0
-
 	# Averages multiple channels into a mono channel
 	if(len(fileData.shape) == 2):
 		if(args.channel == "average"):
@@ -326,27 +323,26 @@ def calculateFrameData(fileData, samplerate):
 	fileData = fileData[int(args.start*samplerate):int(args.end*samplerate)]
 
 	# Splits data into frames
+	frameData = []
 	stepSize = samplerate/args.framerate
-	while (stepSize * frameCounter < len(fileData)):
-		frameDataStart = int(stepSize * frameCounter)
-		frameDataEnd = int(stepSize * (frameCounter + 1))
+	for i in range(int(np.ceil(len(fileData)/stepSize))):
+		frameDataStart = int(stepSize * i)
+		frameDataEnd = int(stepSize * (i + 1))
+		currentFrameData = fileData[int(frameDataStart):int(frameDataEnd)]
+
+	# Fills last frame to full length (Data for last frame may not be a frame long --> last frame has fewer data, gets filled with 0)
+		if(i == int(np.ceil(len(fileData)/stepSize)) - 1):	# Last frame
+			lastFrame = np.zeros(int(stepSize))
+			lastFrame[0:len(currentFrameData)] = currentFrameData
+			currentFrameData = lastFrame
 
 	# Fourier Transformation (Amplitudes)
-		currentFrameData = fileData[int(frameDataStart):int(frameDataEnd)]
 		frameDataAmplitudes = abs(np.fft.rfft(currentFrameData))
 
 	# Slices frameDataAmplitudes to only contain the amplitudes between startFrequency and endFrequency
 		frameDataAmplitudes = frameDataAmplitudes[int(args.frequencyStart/(samplerate/2)*len(frameDataAmplitudes)):int(args.frequencyEnd/(samplerate/2)*len(frameDataAmplitudes))]
 
 		frameData.append(frameDataAmplitudes)
-		frameCounter += 1
-
-	# Scales last frameData to full length if it is not "full" (Less than a frame long, thus has less data than the rest)
-	if(len(frameData[-1]) != len(frameData[0])):
-		lastFrame = []
-		for i in range(len(frameData[0])):
-			lastFrame.append(int(i/stepSize*len(frameData[-1])))
-		frameData[-1] = lastFrame
 
 	return frameData
 
