@@ -4,8 +4,6 @@
 Co-authors: Jannick Kremer, Jonas Bögle
 
 Creates a customizable image sequence for the spectrum of an audio file.
-
-Dependencies: numpy, audio2numpy, matplotlib, ffmpeg
 """
 
 """

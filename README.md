@@ -24,11 +24,11 @@ This script requires [ffmpeg](https://ffmpeg.org/download.html).
 
 Open a command line and change into the directory where the program is located. It is easiest to simply copy the audio file into the same directory, however not at all necessary.
 
-To run the program: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder>` (If no destination folder is given, it defaults to `.\Image Sequence` and creates a new folder in the current directory named `Image Sequence`)
+To run the program: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder>` (If no destination folder is given, it defaults to `imageSequence` in the current directory)
 
-Example: `python AudioSpectrumVisualizer.py '.\Bursty Greedy Spider.mp3' 'Visualizer'`
+Example: `python AudioSpectrumVisualizer.py 'Bursty Greedy Spider.mp3' Visualizer`
 
-This creates an image sequence for the audio spectrum of`Bursty Greedy Spider.mp3` into a newly created folder named `Visualizer` in the same directory.
+This creates an image sequence for the audio spectrum of `Bursty Greedy Spider.mp3` into a newly created folder named `Visualizer` in the same directory.
 
 Example for when audio and destination directory are not in the same directory as the program : `python AudioSpectrumVisualizer.py '.\User\Music\Bursty Greedy Spider.mp3' '.\User\Desktop\Visualizer'`
 

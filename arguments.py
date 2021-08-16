@@ -17,7 +17,7 @@ def initArgs():
 	parser.add_argument("filename", type=str,
 						help="Name or path of the audio file")
 	parser.add_argument("destination", type=str, nargs='?', default="imageSequence",
-						help="Name or path of the created directory in which the image sequence is saved. Default: Image Sequence")
+						help="Name or path of the created directory in which the image sequence is saved. Default: imageSequence")
 
 	# Optional arguments
 	parser.add_argument("-b", "--bins", type=int, default=64,
