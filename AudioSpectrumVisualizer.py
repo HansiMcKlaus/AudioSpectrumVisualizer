@@ -24,7 +24,7 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 from os import mkdir, path
-from sys import exit
+from sys import exit, stdout, stderr
 from joblib import Parallel, delayed
 from multiprocessing import Manager
 import subprocess
@@ -241,6 +241,7 @@ def createVideo():
 		'ffmpeg',
 		'-hide_banner',
 		'-loglevel', 'error',
+		'-stats',
 		'-r', str(args.framerate),
 		'-i', '{}/%0d.png'.format(args.destination)
 	]
@@ -264,15 +265,9 @@ def createVideo():
 
 	proc = subprocess.Popen(
 		arguments,
-		stdout=subprocess.PIPE,
-		stderr=subprocess.STDOUT,
+		stdout=stdout,
+		stderr=stderr,
 	)
-
-	while proc.poll() is None:
-		# Blocks until it receives a newline.
-		line = proc.stdout.readline()
-		print(line.decode(), end='')
-	print(proc.stdout.read().decode(), end='')
 
 	return proc.wait()
 
