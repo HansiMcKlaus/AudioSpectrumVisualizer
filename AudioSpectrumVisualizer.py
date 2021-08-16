@@ -23,10 +23,11 @@ from audio2numpy import open_audio					# Works with several audio formats, inclu
 from time import time
 import numpy as np
 import matplotlib.pyplot as plt
-from os import mkdir, path, system
+from os import mkdir, path
 from sys import exit
 from joblib import Parallel, delayed
 from multiprocessing import Manager
+import subprocess
 
 args = initArgs()									# Arguments as global variables
 
@@ -232,24 +233,48 @@ def testRender():
 
 """
 Creates a video from an image sequence.
+
+Returns ffmpeg's exit status (0 on success).
 """
 def createVideo():
-	flags = '-hide_banner -loglevel error '
-	flags += '-r {} '.format(str(args.framerate))
-	flags += '-i "{}/%0d.png" '.format(str(args.destination))
+	arguments = [
+		'ffmpeg',
+		'-hide_banner',
+		'-loglevel', 'error',
+		'-r', str(args.framerate),
+		'-i', '{}/%0d.png'.format(args.destination)
+	]
+
 	if(args.videoAudio):
-		print("Converting image sequence to video (with audio).")
 		if(args.start != 0):
-			flags += '-ss {} '.format(str(args.start))
-		flags += '-i "{}" '.format(str(args.filename))
+			arguments += ['-ss', str(args.start)]
+		arguments += ['-i', args.filename]
 		if(args.end != -1):
-			flags += '-t {} '.format(args.end - args.start)
-	else:
-		print("Converting image sequence to video.")
+			arguments += ['-t', str(args.end - args.start)]
 
-	flags += '-c:v libx264 -preset ultrafast -crf 16 -pix_fmt yuv420p -y "{}.mp4"'.format(str(args.destination))
+	arguments += [
+		'-c:v', 'libx264',
+		'-preset', 'ultrafast',
+		'-crf', '16',
+		'-pix_fmt', 'yuv420p',
+		'-y', '{}.mp4'.format(args.destination)
+	]
+	
+	print("Converting image sequence to video.")
 
-	system('ffmpeg ' + flags)
+	proc = subprocess.Popen(
+		arguments,
+		stdout=subprocess.PIPE,
+		stderr=subprocess.STDOUT,
+	)
+
+	while proc.poll() is None:
+		# Blocks until it receives a newline.
+		line = proc.stdout.readline()
+		print(line.decode(), end='')
+	print(proc.stdout.read().decode(), end='')
+
+	return proc.wait()
 
 
 """
@@ -282,7 +307,9 @@ def full():
 	print("Created and saved Image Sequence in " + str(format(processTime, ".3f")) + " seconds.")
 
 	if(args.videoAudio or args.video):
-		createVideo()
+		if createVideo() != 0:
+			exit("ffmpeg exited with a failure.")
+		
 		processTime = time() - startTime
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
 
