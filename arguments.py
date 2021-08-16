@@ -202,49 +202,9 @@ def processArgs(args, fileData, samplerate):
 		args.bin_width = float(args.bin_width)
 		args.bin_spacing = float(args.bin_spacing)
 
-	if(args.color == "black"):
-		args.color = [0, 0, 0]
-	elif(args.color == "white"):
-		args.color = [255, 255, 255]
-	elif(args.color == "red"):
-		args.color = [255, 0, 0]
-	elif(args.color == "green"):
-		args.color = [0, 255, 0]
-	elif(args.color == "blue"):
-		args.color = [0, 0, 255]
-	elif(args.color == "yellow"):
-		args.color = [255, 255, 0]
-	elif(args.color == "cyan"):
-		args.color = [0, 255, 255]
-	elif(args.color == "magenta"):
-		args.color = [255, 0, 255]
-	else:																# Converts HEX to RGB
-		color = []
-		for i in (0, 2, 4):
-			color.append(int(args.color[i:i+2], 16))
-		args.color = color
+	args.color = hex2rgb(args.color)									# Color of bins
 
-	if(args.backgroundColor == "black"):
-		args.backgroundColor = [0, 0, 0]
-	elif(args.backgroundColor == "white"):
-		args.backgroundColor = [255, 255, 255]
-	elif(args.backgroundColor == "red"):
-		args.backgroundColor = [255, 0, 0]
-	elif(args.backgroundColor == "green"):
-		args.backgroundColor = [0, 255, 0]
-	elif(args.backgroundColor == "blue"):
-		args.backgroundColor = [0, 0, 255]
-	elif(args.backgroundColor == "yellow"):
-		args.backgroundColor = [255, 255, 0]
-	elif(args.backgroundColor == "cyan"):
-		args.backgroundColor = [0, 255, 255]
-	elif(args.backgroundColor == "magenta"):
-		args.backgroundColor = [255, 0, 255]
-	else:																# Converts HEX to RGB
-		backgroundColor = []
-		for i in (0, 2, 4):
-			backgroundColor.append(int(args.backgroundColor[i:i+2], 16))
-		args.backgroundColor = backgroundColor
+	args.backgroundColor = hex2rgb(args.backgroundColor)				# Color of the background
 
 	if(args.smoothT == "auto"):						# Smoothing over past/next <smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0
 		args.smoothT = int(args.framerate/15)
@@ -278,3 +238,30 @@ def processArgs(args, fileData, samplerate):
 
 	if(args.chunkSize == -1):
 		args.chunkSize = int(DEFAULT_CHUNKSIZE/cpu_count())
+
+
+"""
+Converts HEX string or color name into RGB.
+"""
+def hex2rgb(hex):
+	if(hex == "black"):
+		return [0, 0, 0]
+	elif(hex == "white"):
+		return [255, 255, 255]
+	elif(hex == "red"):
+		return [255, 0, 0]
+	elif(hex == "green"):
+		return [0, 255, 0]
+	elif(hex == "blue"):
+		return [0, 0, 255]
+	elif(hex == "yellow"):
+		return [255, 255, 0]
+	elif(hex == "cyan"):
+		return [0, 255, 255]
+	elif(hex == "magenta"):
+		return [255, 0, 255]
+	else:																# Converts HEX to RGB
+		color = []
+		for i in (0, 2, 4):
+			color.append(int(hex[i:i+2], 16))
+		return color
