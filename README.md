@@ -14,7 +14,7 @@ This script requires [ffmpeg](https://ffmpeg.org/download.html).
     - Debian/Ubuntu: `sudo apt-get install ffmpeg`
     - Arch: `sudo pacman -S ffmpeg`
   - Windows:
-    1. [Download ffmpeg](https://ffmpeg.org/download.html#build-windows)
+    1. [Download ffmpeg](https://ffmpeg.org/download.html)
     2. Extract it into a folder, for example `C:\FFmpeg`
     3. Add the ffmpeg bin folder to your PATH Environment Variable.
     
