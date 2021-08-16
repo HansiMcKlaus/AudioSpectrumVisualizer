@@ -1,0 +1,4 @@
+numpy
+audio2numpy
+matplotlib
+joblib

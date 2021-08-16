@@ -6,9 +6,19 @@ Creates a customizable image sequence for the spectrum of an audio file.
 
 ## Dependencies
 
-Requires the following packages: `numpy`, `audio2numpy`, `matplotlib`, `ffmpeg` and `joblib`
+Install python dependencies: `pip install -r requirements.txt`
 
+This script requires [ffmpeg](https://ffmpeg.org/download.html).
 
+  - Linux:
+    - Debian/Ubuntu: `sudo apt-get install ffmpeg`
+    - Arch: `sudo pacman -S ffmpeg`
+  - Windows:
+    1. [Download ffmpeg](https://ffmpeg.org/download.html#build-windows)
+    2. Extract it into a folder, for example `C:\FFmpeg`
+    3. Add the ffmpeg bin folder to your PATH Environment Variable.
+    
+    [Here](https://www.thewindowsclub.com/how-to-install-ffmpeg-on-windows-10) is a guide that explains the process in detail.
 
 ## Usage
 
@@ -24,7 +34,7 @@ Example for when audio and destination directory are not in the same directory a
 
 
 
-## Optional  arguments
+## Optional arguments
 
 `-h, --help` Shows the standard help message
 
