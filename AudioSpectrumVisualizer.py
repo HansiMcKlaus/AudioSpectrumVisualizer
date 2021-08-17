@@ -149,7 +149,7 @@ Starts at "0.png" for first frame.
 def renderSaveFrames(bins):
 	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
 	div = np.log2(args.ylog + 1)						# Constant for y-scaling
-	numChunks = int(np.ceil(len(bins)/args.chunkSize))	# Total number of chunks
+	numChunks = int(np.ceil(len(bins)/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
 
 	# Create destination folder
 	if(path.exists(args.destination) == False):
@@ -157,7 +157,7 @@ def renderSaveFrames(bins):
 
 	frameCounter = Manager().dict()
 	frameCounter['c'] = 0
-	Parallel(n_jobs=args.cores)(delayed(renderSaveChunk)(bins, j, frameCounter, div) for j in range(numChunks))
+	Parallel(n_jobs=args.processes)(delayed(renderSaveChunk)(j, numChunks, bins, frameCounter, div) for j in range(numChunks))
 
 	printProgressBar(len(bins), len(bins))
 	print()												# New line after progress bar
@@ -165,10 +165,22 @@ def renderSaveFrames(bins):
 """
 Renders and exports one chunk worth of frames
 """
-def renderSaveChunk(bins, chunkCounter, frameCounter, div):
-	start = chunkCounter*args.chunkSize
-	end = (chunkCounter+1)*args.chunkSize
-	if(end > len(bins)):
+def renderSaveChunk(chunkCounter, numChunks, bins, frameCounter, div):
+	start = chunkCounter * args.chunkSize
+	end = (chunkCounter+1) * args.chunkSize
+
+	remainingChunks = numChunks - chunkCounter
+	if(remainingChunks <= args.processes):
+		completedChunkSets = int(numChunks/args.processes) - 1
+		fullSetChunks = completedChunkSets * args.processes
+		fullSetFrames = fullSetChunks * args.chunkSize
+		remainingFrames = len(bins) - fullSetFrames
+		remainderChunkSize = int(remainingFrames/args.processes)
+		remainderChunkNum = chunkCounter - fullSetChunks
+		start = fullSetFrames + remainderChunkNum * remainderChunkSize
+		end = fullSetFrames + (remainderChunkNum+1) * remainderChunkSize
+
+	if(numChunks == chunkCounter+1):			# Sets the last chunk to do all frames that might be left over, to fix possible rounding errors etc.
 		end = len(bins)
 
 	frames = renderChunkFrames(bins, start, end, div)

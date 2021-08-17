@@ -74,8 +74,8 @@ def initArgs():
 	parser.add_argument("-cs", "--chunkSize", type=int, default=-1,
 						help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64")
 
-	parser.add_argument("-cr", "--cores", type=int, default=-1,
-						help="Number of cores to use for rendering and export. Default: All cores")
+	parser.add_argument("-p", "--processes", type=int, default=-1,
+						help="Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)")
 
 	parser.add_argument("-t", "--test", action='store_true', default=False,
 						help="Renders only a single frame for style testing. Default: False")
@@ -181,8 +181,8 @@ def processArgs(args, fileData, samplerate):
 	if(args.chunkSize == 0 or args.chunkSize < -1):
 		exit("Chunk size must be at least 1.")
 
-	if(args.cores == 0 or args.cores < -1):
-		exit("Number of cores must be at least 1")
+	if(args.processes == 0 or args.processes < -1):
+		exit("Number of processes must be at least 1")
 
 	# Process optional arguments:
 	if(args.disableSmoothing):
@@ -238,6 +238,9 @@ def processArgs(args, fileData, samplerate):
 
 	if(args.chunkSize == -1):
 		args.chunkSize = int(DEFAULT_CHUNKSIZE/cpu_count())
+
+	if(args.processes == -1):
+		args.processes = cpu_count()
 
 
 """

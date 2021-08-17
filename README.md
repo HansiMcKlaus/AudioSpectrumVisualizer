@@ -78,9 +78,9 @@ Example for when audio and destination directory are not in the same directory a
 
 `-cs, --chunkSize` Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: auto
 
-`-cr, --cores` Number of cores to use for rendering and export. Default: All cores
+`-p, --processes` Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)
 
-RAM usage is proportional to the chunksize multiplied by the number of cores. Per default (auto) the chunksize is set to 128 divided by the number of cores. Ex. 128/4 = chunksize of 32 per core on a machine with 4 cores. You may want to increase the chunksize on a machine with many cores for better performance, as a larger chunksize per core increases speed.
+RAM usage is proportional to the chunksize multiplied by the number of processes. Per default (auto) the chunksize is set to 128 divided by the number of processes. Ex. 128/4 = chunksize of 32 per processes on a machine with 4 cores and no hyperthreading. You may want to increase the chunksize on a machine with many cores for better performance, as a larger chunksize per process increases speed.
 Warning: Setting the chunksize too high on a low amount of rendered frames may lead to bad load balancing, resulting in a slower export.
 
 
