@@ -87,7 +87,7 @@ Warning: Setting the chunksize too high on a low amount of rendered frames may l
 
 ## Styles
 
-Currently only a white bar chart, however more will be added at a later date!
+Currently only a bar chart with adjustable colors for the bars and background, however more will be added at a later date!
 
 `-t, --test` Renders only a single frame for style testing. Default: False
 
@@ -106,3 +106,7 @@ Default: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Fo
 Slim bins: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 128 -bw 5`
 
 <img src="screenshots/slimBins.png" alt="default" style="zoom: 50%;" />
+
+IKEA: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 12 -c yellow -bgc blue`
+
+<img src="screenshots/IKEA.png" alt="default" style="zoom: 50%;" />
