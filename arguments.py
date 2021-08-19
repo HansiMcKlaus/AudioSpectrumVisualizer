@@ -77,8 +77,8 @@ def initArgs():
 	parser.add_argument("-p", "--processes", type=int, default=-1,
 						help="Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)")
 
-	parser.add_argument("-t", "--test", action='store_true', default=False,
-						help="Renders only a single frame for style testing. Default: False")
+	# parser.add_argument("-t", "--test", action='store_true', default=False,
+	# 					help="Renders only a single frame for style testing. Default: False")
 
 	parser.add_argument("-v", "--video", action='store_true', default=False,
 						help="Additionally creates a video (.mp4) from image sequence. Default: False")
@@ -216,12 +216,12 @@ def processArgs(args, fileData, samplerate):
 	else:
 		args.smoothY = int(args.smoothY)
 
-	if(args.start == 0 or args.test == 1):			# Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1
+	if(args.start == 0):							# Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1
 		args.start = 0
 	else:
 		args.start = float(args.start)
 
-	if(args.end == -1 or args.test == 1):			# Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1
+	if(args.end == -1):								# Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1
 		args.end = len(fileData)/samplerate
 	else:
 		args.end = float(args.end)

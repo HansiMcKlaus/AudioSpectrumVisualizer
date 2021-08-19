@@ -7,7 +7,6 @@ Creates a customizable image sequence for the spectrum of an audio file.
 """
 
 """
-TODO: Remove Test Render
 TODO: Implement input of audio length for single frame (Currently 1/Framerate)
 TODO: Implement different styles
 		Styles:
@@ -15,6 +14,7 @@ TODO: Implement different styles
 			Points: Shapes
 			Line: Thicknes
 			Filled
+TODO: Reimplement style testing
 """
 
 from arguments import args, initArgs, processArgs	# Handles arguments
@@ -226,24 +226,6 @@ def printProgressBar (iteration, total, prefix = "Progress:", suffix = "Complete
 
 
 """
-Renders a single frame from testData (00:11:000 to 00:11:033 of "Bursty Greedy Spider" by Konomi Suzuki) for style testing.
-"""
-def testRender():
-	fileData, samplerate = loadAudio()
-	processArgs(fileData, samplerate)
-
-	testData = np.load("testData.npy")
-	args.start = 0
-	args.end = 1/args.framerate
-
-	frameData = calculateFrameData(testData, 44100)
-	bins = createBins(frameData)
-	testFrame = renderSaveFrames(bins)
-	plt.imsave("testFrame.png", testFrame, vmin=0, vmax=255, cmap='gray')
-	print("Created Frame for Style Testing in current directory.")
-
-
-"""
 Creates a video from an image sequence.
 
 Returns ffmpeg's exit status (0 on success).
@@ -287,7 +269,7 @@ def createVideo():
 """
 Main method. Initializes the complete process from start to finish.
 """
-def full():
+if __name__ == '__main__':
 	startTime = time()
 
 	fileData, samplerate = loadAudio()
@@ -321,9 +303,3 @@ def full():
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
 
 	print("Finished!")
-
-if __name__ == '__main__':
-	if(args.test):
-		testRender()
-	else:
-		full()
