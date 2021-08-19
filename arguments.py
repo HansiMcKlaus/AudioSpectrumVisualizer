@@ -247,23 +247,309 @@ def processArgs(args, fileData, samplerate):
 Converts HEX string or color name into RGB.
 """
 def hex2rgb(hex):
+	# No color
 	if(hex == "black"):
 		return [0, 0, 0]
 	elif(hex == "white"):
 		return [255, 255, 255]
+
+	# Red
+	elif(hex == "indianRed"):
+		return [205, 92, 92]
+	elif(hex == "lightCoral"):
+		return [240, 128, 128]
+	elif(hex == "salmon"):
+		return [250, 128, 114]
+	elif(hex == "darkSalmon"):
+		return [233, 150, 122]
+	elif(hex == "lightSalmon"):
+		return [255, 160, 122]
+	elif(hex == "crimson"):
+		return [220, 20, 60]
 	elif(hex == "red"):
 		return [255, 0, 0]
-	elif(hex == "green"):
-		return [0, 255, 0]
-	elif(hex == "blue"):
-		return [0, 0, 255]
+	elif(hex == "fireBrick"):
+		return [178, 34, 34]
+	elif(hex == "darkRed"):
+		return [139, 0, 0]
+
+	# Pink
+	elif(hex == "pink"):
+		return [255, 192, 203]
+	elif(hex == "lightPink"):
+		return [255, 182, 193]
+	elif(hex == "hotPink"):
+		return [255, 105, 180]
+	elif(hex == "deepPink"):
+		return [255, 20, 147]
+	elif(hex == "mediumVioletRed"):
+		return [199, 21, 133]
+	elif(hex == "paleVioletRed"):
+		return [219, 112, 147]
+
+	# Orange
+	elif(hex == "coral"):
+		return [255, 127, 80]
+	elif(hex == "tomato"):
+		return [255, 99, 71]
+	elif(hex == "orangeRed"):
+		return [255, 69, 0]
+	elif(hex == "darkOrange"):
+		return [255, 140, 0]
+	elif(hex == "orange"):
+		return [255, 165, 0]
+
+	# Yellow
+	elif(hex == "gold"):
+		return [255, 215, 0]
 	elif(hex == "yellow"):
 		return [255, 255, 0]
-	elif(hex == "cyan"):
-		return [0, 255, 255]
-	elif(hex == "magenta"):
+	elif(hex == "lightYellow"):
+		return [255, 255, 224]
+	elif(hex == "lemonChiffon"):
+		return [255, 250, 205]
+	elif(hex == "lightGoldenrodYellow"):
+		return [250, 250, 210]
+	elif(hex == "papayaWhip"):
+		return [255, 239, 213]
+	elif(hex == "moccasin"):
+		return [255, 228, 181]
+	elif(hex == "peachPuff"):
+		return [255, 218, 185]
+	elif(hex == "paleGoldenrod"):
+		return [238, 232, 170]
+	elif(hex == "khaki"):
+		return [240, 230, 140]
+	elif(hex == "darkKhaki"):
+		return [189, 183, 107]
+
+	# Purple
+	elif(hex == "lavnder"):
+		return [230, 230, 250]
+	elif(hex == "thistle"):
+		return [216, 191, 216]
+	elif(hex == "plum"):
+		return [221, 160, 221]
+	elif(hex == "viplet"):
+		return [238, 130, 238]
+	elif(hex == "orchid"):
+		return [218, 112, 214]
+	elif(hex == "magenta" or hex == "fuchsia"):
 		return [255, 0, 255]
-	else:																# Converts HEX to RGB
+	elif(hex == "mediumOrchid"):
+		return [186, 85, 211]
+	elif(hex == "mediumPurple"):
+		return [147, 112, 219]
+	elif(hex == "rebeccaPurple"):
+		return [102, 51, 153]
+	elif(hex == "blueViolet"):
+		return [138, 43, 226]
+	elif(hex == "darkViolet"):
+		return [148, 0, 211]
+	elif(hex == "darkOrchid"):
+		return [153, 50, 204]
+	elif(hex == "darkMagenta"):
+		return [139, 0, 139]
+	elif(hex == "purple"):
+		return [128, 0, 128]
+	elif(hex == "indigo"):
+		return [75, 0, 130]
+	elif(hex == "slateBlue"):
+		return [106, 90, 205]
+	elif(hex == "darkSlateBlue"):
+		return [72, 61, 139]
+	elif(hex == "mediumSlateBlue"):
+		return [123, 104, 238]
+
+	# Green
+	elif(hex == "greenYellow"):
+		return [173, 255, 47]
+	elif(hex == "chartreuse"):
+		return [127, 255, 0]
+	elif(hex == "lawnGreen"):
+		return [124, 252, 0]
+	elif(hex == "lime"):
+		return [0, 255, 0]
+	elif(hex == "limeGreen"):
+		return [50, 205, 50]
+	elif(hex == "paleGreen"):
+		return [152, 251, 152]
+	elif(hex == "lightGreen"):
+		return [144, 238, 144]
+	elif(hex == "mediumSpringGreen"):
+		return [0, 250, 154]
+	elif(hex == "springGreen"):
+		return [0, 255, 127]
+	elif(hex == "mediumSeaGreen"):
+		return [60, 179, 113]
+	elif(hex == "seaGreen"):
+		return [46, 139, 87]
+	elif(hex == "forestGreen"):
+		return [34, 139, 34]
+	elif(hex == "green"):
+		return [0, 128, 0]
+	elif(hex == "darkGreen"):
+		return [0, 100, 0]
+	elif(hex == "yellowGreen"):
+		return [154, 205, 50]
+	elif(hex == "oliveDrab"):
+		return [107, 142, 35]
+	elif(hex == "olive"):
+		return [128, 128, 0]
+	elif(hex == "darkOliveGreen"):
+		return [85, 107, 47]
+	elif(hex == "mediumAquamarine"):
+		return [102, 205, 170]
+	elif(hex == "darkSeaGreen"):
+		return [143, 188, 139]
+	elif(hex == "lightSeaGreen"):
+		return [32, 178, 170]
+	elif(hex == "darkCyan"):
+		return [0, 139, 139]
+	elif(hex == "teal"):
+		return [0, 128, 128]
+	
+	
+	# Blue
+	elif(hex == "cyan" or hex == "aqua"):
+		return [0, 255, 255]
+	elif(hex == "lightCyan"):
+		return [224, 255, 255]
+	elif(hex == "paleTurqouoise"):
+		return [175, 238, 238]
+	elif(hex == "aquamarine"):
+		return [127, 255, 212]
+	elif(hex == "turquoise"):
+		return [64, 224, 208]
+	elif(hex == "mediumTurqouoise"):
+		return [72, 209, 204]
+	elif(hex == "darkTurqouoise"):
+		return [0, 206, 209]
+	elif(hex == "cadetBlue"):
+		return [95, 158, 160]
+	elif(hex == "steelBlue"):
+		return [70, 130, 180]
+	elif(hex == "lightSteelBlue"):
+		return [176, 196, 222]
+	elif(hex == "powderBlue"):
+		return [176, 224, 230]
+	elif(hex == "lightBlue"):
+		return [173, 216, 230]
+	elif(hex == "skyBlue"):
+		return [135, 206, 235]
+	elif(hex == "lightSkyBlue"):
+		return [135, 206, 250]
+	elif(hex == "deepSkyBlue"):
+		return [0, 191, 255]
+	elif(hex == "dodgerBlue"):
+		return [30, 144, 255]
+	elif(hex == "cornflowerBlue"):
+		return [100, 149, 237]
+	elif(hex == "royaleBlue"):
+		return [65, 105, 225]
+	elif(hex == "blue"):
+		return [0, 0, 255]
+	elif(hex == "mediumBlue"):
+		return [0, 0, 205]
+	elif(hex == "darkBlue"):
+		return [0, 0, 139]
+	elif(hex == "navy"):
+		return [0, 0, 128]
+	elif(hex == "midnightBlue"):
+		return [25, 25, 112]
+
+	# Brown
+	elif(hex == "cornsilk"):
+		return [255, 248, 220]
+	elif(hex == "blanchedAlmond"):
+		return [255, 235, 205]
+	elif(hex == "bisque"):
+		return [255, 228, 196]
+	elif(hex == "navojoWhite"):
+		return [255, 222, 173]
+	elif(hex == "wheat"):
+		return [245, 222, 179]
+	elif(hex == "burlyWood"):
+		return [222, 184, 135]
+	elif(hex == "tan"):
+		return [210, 180, 140]
+	elif(hex == "rosyBrown"):
+		return [188, 143, 143]
+	elif(hex == "sandyBrown"):
+		return [244, 164, 96]
+	elif(hex == "goldenrod"):
+		return [218, 165, 32]
+	elif(hex == "darkGoldenrod"):
+		return [184, 134, 11]
+	elif(hex == "peru"):
+		return [205, 133, 63]
+	elif(hex == "chocolate"):
+		return [210, 105, 30]
+	elif(hex == "saddleBrown"):
+		return [139, 69, 19]
+	elif(hex == "sienna"):
+		return [160, 82, 45]
+	elif(hex == "brown"):
+		return [165, 42, 42]
+	elif(hex == "maroon"):
+		return [128, 0, 0]
+
+	# White
+	elif(hex == "snow"):
+		return [255, 250, 250]
+	elif(hex == "honeyDew"):
+		return [240, 255, 240]
+	elif(hex == "mintCream"):
+		return [245, 255, 250]
+	elif(hex == "azure"):
+		return [240, 255, 255]
+	elif(hex == "aliceBlue"):
+		return [240, 248, 255]
+	elif(hex == "ghostWhite"):
+		return [248, 248, 255]
+	elif(hex == "whiteSmoke"):
+		return [245, 245, 245]
+	elif(hex == "seaShell"):
+		return [255, 245, 238]
+	elif(hex == "beige"):
+		return [245, 245, 220]
+	elif(hex == "oldLace"):
+		return [253, 245, 230]
+	elif(hex == "floralWhite"):
+		return [255, 250, 240]
+	elif(hex == "ivory"):
+		return [255, 255, 240]
+	elif(hex == "antiqueWhite"):
+		return [250, 235, 215]
+	elif(hex == "linen"):
+		return [250, 240, 230]
+	elif(hex == "lavenderBlush"):
+		return [255, 240, 245]
+	elif(hex == "mystyRose"):
+		return [255, 228, 225]
+
+	# Gray
+	elif(hex == "gainsboro"):
+		return [220, 220, 220]
+	elif(hex == "lightGray"):
+		return [211, 211, 211]
+	elif(hex == "silver"):
+		return [192, 192, 192]
+	elif(hex == "darkGray"):
+		return [169, 169, 169]
+	elif(hex == "gray"):
+		return [128, 128, 128]
+	elif(hex == "dimGray"):
+		return [105, 105, 105]
+	elif(hex == "lightSlateGray"):
+		return [119, 136, 153]
+	elif(hex == "slateGray"):
+		return [112, 128, 144]
+	elif(hex == "darkSlateGray"):
+		return [47, 79, 79]
+
+	# Converts HEX to RGB
+	else:
 		color = []
 		for i in (0, 2, 4):
 			color.append(int(hex[i:i+2], 16))

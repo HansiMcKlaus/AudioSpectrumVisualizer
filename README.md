@@ -92,6 +92,8 @@ Currently only a bar chart with adjustable colors for the bars and background, h
 
 `-bgc, --backgroundColor` Color of the background. Ex: ff0000 or red. Default: 000000 (black)
 
+Color names are equal to the 140 named colors supported by HTML and CSS. Colors must be written in lower camel case, ex. `hotPink` not `HotPink`. [Overwiev of named colors](https://htmlcolorcodes.com/color-names/).
+
 
 
 ## Examples
