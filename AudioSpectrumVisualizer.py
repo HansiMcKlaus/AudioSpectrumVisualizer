@@ -6,17 +6,6 @@ Co-authors: Jannick Kremer, Jonas Bögle
 Creates a customizable image sequence for the spectrum of an audio file.
 """
 
-"""
-TODO: Implement input of audio length for single frame (Currently 1/Framerate)
-TODO: Implement different styles
-		Styles:
-			Bar: Filled, Blocks, Centered on y-axis
-			Points: Shapes
-			Line: Thicknes
-			Filled
-TODO: Reimplement style testing
-"""
-
 from arguments import args, initArgs, processArgs	# Handles arguments
 
 from audio2numpy import open_audio					# Works with several audio formats, including .mp3 (Uses ffmpeg as subroutine)
