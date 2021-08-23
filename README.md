@@ -56,7 +56,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-ylog` Scales the Y-axis logarithmically to a given base. Default: 0 (Linear)
 
-`-st, --smoothT` Smoothing over past/next \<smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0
+`-d, --duration` Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1
 
 `-sy, --smoothY` Smoothing over past/next \<smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
 

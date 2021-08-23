@@ -53,8 +53,8 @@ def initArgs():
 	parser.add_argument("-ylog", type=float, default=0,
 						help="Scales the Y-axis logarithmically to a given base. Default: 0 (linear)")
 
-	parser.add_argument("-st", "--smoothT", type=str, default="0",
-						help="Smoothing over past/next <smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0")
+	parser.add_argument("-d", "--duration", type=float, default="-1",
+						help="Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1")
 
 	parser.add_argument("-sy", "--smoothY", type=str, default="0",
 						help="Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0")
@@ -66,7 +66,7 @@ def initArgs():
 						help="Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1")
 
 	parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
-						help="Limits the range of frequencies to <frequencyStart>Hz and onward. Default: -1")
+						help="Limits the range of frequencies to <frequencyStart>Hz and onward. Default: 0")
 
 	parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 						help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1")
@@ -130,9 +130,13 @@ def processArgs(args, fileData, samplerate):
 		if(float(args.bin_spacing) < 0):
 			exit("Bin spacing must be 0px or higher")
 
-	if(args.smoothT != "auto"):
-		if(int(args.smoothT) < 0):
-			exit("Smoothing scalar for smoothing between frames must be 0 or higher.")
+	if(args.duration != -1):
+		if(args.duration <= 0):
+			exit("Duratio must be longer than 0ms.")
+
+	if(args.duration != -1):
+		if(float(args.duration) > len(fileData)/samplerate):
+			exit("Duratio must not be longer than audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
 
 	if(args.smoothY != "auto"):
 		if(int(args.smoothY) < 0):
@@ -186,7 +190,6 @@ def processArgs(args, fileData, samplerate):
 
 	# Process optional arguments:
 	if(args.disableSmoothing):
-		args.smoothT = 0
 		args.smoothY = 0
 
 	if(args.bin_width == "auto" and args.bin_spacing != "auto"):		# Only bin_spacing is given
@@ -206,10 +209,8 @@ def processArgs(args, fileData, samplerate):
 
 	args.backgroundColor = hex2rgb(args.backgroundColor)				# Color of the background
 
-	if(args.smoothT == "auto"):						# Smoothing over past/next <smoothT> frames (Smoothes bin over time). If smoothT=auto: Automatic smoothing is applied (framerate/15). Default: 0
-		args.smoothT = int(args.framerate/15)
-	else:
-		args.smoothT = int(args.smoothT)
+	if(args.duration == -1):
+		args.duration = 1000/args.framerate			# Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1
 
 	if(args.smoothY == "auto"):						# Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
 		args.smoothY = int(args.bins/32)

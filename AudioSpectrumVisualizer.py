@@ -63,15 +63,22 @@ def calculateFrameData(fileData, samplerate):
 	frameData = []
 	stepSize = samplerate/args.framerate
 	for i in range(int(np.ceil(len(fileData)/stepSize))):
-		frameDataStart = int(stepSize * i)
-		frameDataEnd = int(stepSize * (i + 1))
-		currentFrameData = fileData[int(frameDataStart):int(frameDataEnd)]
+		frameDataMidpoint = stepSize * i + (stepSize/2)
+		frameDataStart = int(frameDataMidpoint - (args.duration/1000/2)*samplerate)
+		frameDataEnd = int(frameDataMidpoint + (args.duration/1000/2)*samplerate)
 
-	# Fills last frame to full length (Data for last frame may not be a frame long --> last frame has fewer data, gets filled with 0)
-		if(i == int(np.ceil(len(fileData)/stepSize)) - 1):	# Last frame
-			lastFrame = np.zeros(int(stepSize))
-			lastFrame[0:len(currentFrameData)] = currentFrameData
-			currentFrameData = lastFrame
+		if(frameDataStart < 0):					# Leftbound data
+			emptyFrame = np.zeros(int(args.duration/1000 * samplerate))
+			currentFrameData = fileData[0:frameDataEnd]
+			emptyFrame[0:len(currentFrameData)] = currentFrameData
+			currentFrameData = emptyFrame
+		elif(frameDataEnd > len(fileData)):		# Rightbound data
+			emptyFrame = np.zeros(int(args.duration/1000 * samplerate))
+			currentFrameData = fileData[frameDataStart:]
+			emptyFrame[0:len(currentFrameData)] = currentFrameData
+			currentFrameData = emptyFrame
+		else:									# Inbound data
+			currentFrameData = fileData[int(frameDataStart):int(frameDataEnd)]
 
 	# Fourier Transformation (Amplitudes)
 		frameDataAmplitudes = abs(np.fft.rfft(currentFrameData))
@@ -82,23 +89,6 @@ def calculateFrameData(fileData, samplerate):
 		frameData.append(frameDataAmplitudes)
 
 	return frameData
-
-
-"""
-Smoothes the bins in time (Over the past/next n frames).
-Creates a kind of foresight/delay as it takes data from previous/next frames --> Factor should be kept small.
-"""
-def smoothFrameData(frameData):
-	frameDataSmoothed = []
-	for i in range(len(frameData)):
-		if(i < args.smoothT):							# First n frame data
-			frameDataSmoothed.append(np.mean(frameData[:i+args.smoothT+1], axis=0))
-		elif(i >= len(frameData)-args.smoothT):			# Last n frame data
-			frameDataSmoothed.append(np.mean(frameData[i-args.smoothT:], axis=0))
-		else:											# Normal Case
-			frameDataSmoothed.append(np.mean(frameData[i-args.smoothT:i+args.smoothT+1], axis=0))
-
-	return frameDataSmoothed
 
 
 """
@@ -277,8 +267,6 @@ if __name__ == '__main__':
 	print("Audio succesfully loaded. (1/4)")
 
 	frameData = calculateFrameData(fileData, samplerate)
-	if(args.smoothT > 0):
-		frameData = smoothFrameData(frameData)
 	del fileData, samplerate
 	print("Frame data created. (2/4)")
 
