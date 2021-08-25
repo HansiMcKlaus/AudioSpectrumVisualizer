@@ -79,8 +79,8 @@ def initArgs():
 	parser.add_argument("-p", "--processes", type=int, default=-1,
 						help="Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)")
 
-	# parser.add_argument("-t", "--test", action='store_true', default=False,
-	# 					help="Renders only a single frame for style testing. Default: False")
+	parser.add_argument("-t", "--test", action='store_true', default=False,
+						help="Renders only a single frame for style testing. Default: False")
 
 	parser.add_argument("-v", "--video", action='store_true', default=False,
 						help="Additionally creates a video (.mp4) from image sequence. Default: False")
@@ -156,7 +156,7 @@ def processArgs(args, fileData, samplerate):
 		if(float(args.start) >= len(fileData)/samplerate):
 			exit("Start time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
 
-	if(args.end != -1):
+	if(args.end != -1 and not args.test):
 		if(float(args.end) > len(fileData)/samplerate):
 			exit("End time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
 
@@ -193,6 +193,11 @@ def processArgs(args, fileData, samplerate):
 	# Process optional arguments:
 	if(args.disableSmoothing):
 		args.smoothY = 0
+	
+	if(args.test):
+		args.framerate = 30												# Forces framerate when style testing
+		args.video = 0													# Forces no video when style testing
+		args.videoAudio = 0
 
 	if(args.bin_width == "auto" and args.bin_spacing != "auto"):		# Only bin_spacing is given
 		args.bin_width = args.width/args.bins - float(args.bin_spacing)
@@ -219,12 +224,12 @@ def processArgs(args, fileData, samplerate):
 	else:
 		args.smoothY = int(args.smoothY)
 
-	if(args.start == 0):							# Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1
+	if(args.start == 0 or args.test == 1):			# Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1
 		args.start = 0
 	else:
 		args.start = float(args.start)
 
-	if(args.end == -1):								# Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1
+	if(args.end == -1 or args.test == 1):			# Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1
 		args.end = len(fileData)/samplerate
 	else:
 		args.end = float(args.end)

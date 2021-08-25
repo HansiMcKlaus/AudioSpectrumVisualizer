@@ -88,6 +88,8 @@ RAM usage is proportional to the chunksize multiplied by the number of processes
 
 Currently only a bar chart with adjustable colors for the bars and background, however more will be added at a later date!
 
+`-t, --test` Renders a single frame for style testing. Default: False
+
 `-c, --color` Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)
 
 `-bgc, --backgroundColor` Color of the background. Ex: ff0000 or red. Default: 000000 (black)

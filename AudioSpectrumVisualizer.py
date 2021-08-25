@@ -25,11 +25,16 @@ args = initArgs()									# Arguments as global variables
 Loads audio file.
 """
 def loadAudio():
-	if(path.isfile(args.filename) == False):
-		exit("Path to file does not exist.")
-
-	fileData, samplerate = open_audio(args.filename)
-	return fileData, samplerate
+	if(args.test):
+		fileData = np.load("testData.npy")
+		samplerate = 44100
+		return fileData, samplerate
+	else:
+		if(path.isfile(args.filename) == False):
+			exit("Path to file does not exist.")
+		else:
+			fileData, samplerate = open_audio(args.filename)
+			return fileData, samplerate
 
 
 """
@@ -189,10 +194,16 @@ Exports one chunk of frames as a .png image sequence into it.
 """
 def saveChunkImages(frames, start, length, frameCounter):
 	# Save image sequence
-	for i in range(len(frames)):
-		plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], vmin=0, vmax=255, cmap='gray')
-		frameCounter['c'] += 1
-		printProgressBar(frameCounter['c'], length)
+	if(args.test):
+		for i in range(len(frames)):
+			plt.imsave("testFrame.png", frames[i], vmin=0, vmax=255, cmap='gray')
+			frameCounter['c'] += 1
+			printProgressBar(frameCounter['c'], length)
+	else:
+		for i in range(len(frames)):
+			plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], vmin=0, vmax=255, cmap='gray')
+			frameCounter['c'] += 1
+			printProgressBar(frameCounter['c'], length)
 
 """
 Progress Bar (Modified from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
