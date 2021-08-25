@@ -136,7 +136,7 @@ def renderSaveFrames(bins):
 	numChunks = int(np.ceil(len(bins)/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
 
 	# Create destination folder
-	if(path.exists(args.destination) == False):
+	if(path.exists(args.destination) == False and not args.test):
 		mkdir(args.destination)
 
 	frameCounter = Manager().dict()
