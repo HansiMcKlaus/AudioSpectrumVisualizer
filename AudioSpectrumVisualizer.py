@@ -132,6 +132,12 @@ Creates directory named <DESTINATION>, renders frames from bin data and exports 
 Starts at "0.png" for first frame.
 """
 def renderSaveFrames(bins):
+	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
+
+	if(args.ylog != 0):
+		div = np.log2(args.ylog + 1)						# Constant for y-scaling
+		bins = np.log2(args.ylog * np.array(bins) + 1)/div	# Y-scaling
+
 	numChunks = int(np.ceil(len(bins)/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
 
 	# Create destination folder
@@ -173,12 +179,6 @@ def renderSaveChunk(chunkCounter, numChunks, bins, frameCounter):
 Renders one chunk of frames
 """
 def renderChunkFrames(bins, start, end):
-	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
-
-	if(args.ylog != 0):
-		div = np.log2(args.ylog + 1)						# Constant for y-scaling
-		bins = np.log2(args.ylog * np.array(bins) + 1)/div	# Y-scaling
-
 	frames = []
 	for j in range(start, end):
 		frame = renderFrame(args, bins, j)
