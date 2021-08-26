@@ -37,6 +37,9 @@ def initArgs():
 	parser.add_argument("-bs", "--bin_spacing", type=str, default="auto",
 						help="Spacing between bins in px. Default: auto (1/6 * width/bins)")
 
+	parser.add_argument("-st", "--style", type=str, default="bars",
+						help="Defines render style: bars, points.")
+
 	parser.add_argument("-c", "--color", type=str, default="ffffff",
 						help="Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)")
 
@@ -117,6 +120,9 @@ def processArgs(args, fileData, samplerate):
 
 	if(args.channel != "left" and args.channel != "right" and args.channel != "average"):
 		exit("Invalid channel. Valid channels: left, right, average.")
+
+	if(args.style != "bars" and args.style != "points"):
+		exit("Style not recognized. Available styles: bars, points.")
 
 	if(args.xlog < 0):
 		exit("Scalar for xlog must not be smaller than 0.")

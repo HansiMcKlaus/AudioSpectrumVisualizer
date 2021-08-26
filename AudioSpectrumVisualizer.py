@@ -7,6 +7,7 @@ Creates a customizable image sequence for the spectrum of an audio file.
 """
 
 from arguments import args, initArgs, processArgs	# Handles arguments
+from styles import renderFrame						# Handles styles
 
 from audio2numpy import open_audio					# Works with several audio formats, including .mp3 (Uses ffmpeg as subroutine)
 from time import time
@@ -180,12 +181,7 @@ def renderChunkFrames(bins, start, end):
 
 	frames = []
 	for j in range(start, end):
-		frame = np.full((args.height, int(args.bins*(args.bin_width+args.bin_spacing)), 3), args.backgroundColor)
-		frame = frame.astype(np.uint8)					# Set datatype to uint8 to reduce RAM usage
-		for k in range(args.bins):
-			frame[int(0):int(np.ceil(bins[j,k]*args.height)),
-				int(k*args.bin_width + k*args.bin_spacing):int((k+1)*args.bin_width + k*args.bin_spacing)] = args.color
-		frame = np.flipud(frame)
+		frame = renderFrame(args, bins, j)
 		frames.append(frame)
 	return frames
 
