@@ -1,4 +1,4 @@
-from color import hex2rgb
+from color import hex2rgb							# Handles colors
 
 import argparse
 from joblib import cpu_count

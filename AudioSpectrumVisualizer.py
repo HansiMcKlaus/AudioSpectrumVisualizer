@@ -131,8 +131,6 @@ Creates directory named <DESTINATION>, renders frames from bin data and exports 
 Starts at "0.png" for first frame.
 """
 def renderSaveFrames(bins):
-	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
-	div = np.log2(args.ylog + 1)						# Constant for y-scaling
 	numChunks = int(np.ceil(len(bins)/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
 
 	# Create destination folder
@@ -141,7 +139,7 @@ def renderSaveFrames(bins):
 
 	frameCounter = Manager().dict()
 	frameCounter['c'] = 0
-	Parallel(n_jobs=args.processes)(delayed(renderSaveChunk)(j, numChunks, bins, frameCounter, div) for j in range(numChunks))
+	Parallel(n_jobs=args.processes)(delayed(renderSaveChunk)(j, numChunks, bins, frameCounter) for j in range(numChunks))
 
 	printProgressBar(len(bins), len(bins))
 	print()												# New line after progress bar
@@ -149,7 +147,7 @@ def renderSaveFrames(bins):
 """
 Renders and exports one chunk worth of frames
 """
-def renderSaveChunk(chunkCounter, numChunks, bins, frameCounter, div):
+def renderSaveChunk(chunkCounter, numChunks, bins, frameCounter):
 	start = chunkCounter * args.chunkSize
 	end = (chunkCounter+1) * args.chunkSize
 
@@ -167,23 +165,25 @@ def renderSaveChunk(chunkCounter, numChunks, bins, frameCounter, div):
 	if(numChunks == chunkCounter+1):			# Sets the last chunk to do all frames that might be left over, to fix possible rounding errors etc.
 		end = len(bins)
 
-	frames = renderChunkFrames(bins, start, end, div)
+	frames = renderChunkFrames(bins, start, end)
 	saveChunkImages(frames, start, len(bins), frameCounter)
 
 """
 Renders one chunk of frames
 """
-def renderChunkFrames(bins, start, end, div):
+def renderChunkFrames(bins, start, end):
+	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
+
+	if(args.ylog != 0):
+		div = np.log2(args.ylog + 1)						# Constant for y-scaling
+		bins = np.log2(args.ylog * np.array(bins) + 1)/div	# Y-scaling
+
 	frames = []
 	for j in range(start, end):
 		frame = np.full((args.height, int(args.bins*(args.bin_width+args.bin_spacing)), 3), args.backgroundColor)
 		frame = frame.astype(np.uint8)					# Set datatype to uint8 to reduce RAM usage
 		for k in range(args.bins):
-			if(args.ylog == 0):
-				binHeight = np.ceil(bins[j, k] * frame.shape[0])
-			else:
-				binHeight = np.ceil(np.log2(args.ylog * bins[j, k] + 1)/div * frame.shape[0])
-			frame[int(0):int(binHeight),
+			frame[int(0):int(np.ceil(bins[j,k]*args.height)),
 				int(k*args.bin_width + k*args.bin_spacing):int((k+1)*args.bin_width + k*args.bin_spacing)] = args.color
 		frame = np.flipud(frame)
 		frames.append(frame)
