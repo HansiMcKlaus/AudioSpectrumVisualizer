@@ -38,7 +38,13 @@ def initArgs():
 						help="Spacing between bins in px. Default: auto (1/6 * width/bins)")
 
 	parser.add_argument("-st", "--style", type=str, default="bars",
-						help="Defines render style: bars, points.")
+						help="Defines render style: bars, points. Default: bars")
+
+	parser.add_argument("-pst", "--pointStyle", type=str, default="circle",
+						help="Defines point style: slab, block, circle. Default: circle")
+
+	parser.add_argument("-pw", "--pointWidth", type=float, default=-1,
+						help="Width of the points in px. Default: bin width")
 
 	parser.add_argument("-c", "--color", type=str, default="ffffff",
 						help="Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)")
@@ -58,7 +64,7 @@ def initArgs():
 	parser.add_argument("-ylog", type=float, default=0,
 						help="Scales the Y-axis logarithmically to a given base. Default: 0 (linear)")
 
-	parser.add_argument("-d", "--duration", type=float, default="-1",
+	parser.add_argument("-d", "--duration", type=float, default=-1,
 						help="Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1")
 
 	parser.add_argument("-sy", "--smoothY", type=str, default="0",
@@ -123,6 +129,12 @@ def processArgs(args, fileData, samplerate):
 
 	if(args.style != "bars" and args.style != "points"):
 		exit("Style not recognized. Available styles: bars, points.")
+
+	if(args.pointStyle != "slab" and args.pointStyle != "block" and args.pointStyle != "circle" and args.pointStyle != "donut"):
+		exit("Point style not recognized. Available styles: bar, block, circle.")
+
+	if(args.pointWidth < 1 and args.pointWidth != -1):
+		exit("Point width must be at least 1px.")
 
 	if(args.xlog < 0):
 		exit("Scalar for xlog must not be smaller than 0.")
@@ -217,6 +229,12 @@ def processArgs(args, fileData, samplerate):
 	else:																# Both are given (Overwrites width)
 		args.bin_width = float(args.bin_width)
 		args.bin_spacing = float(args.bin_spacing)
+
+	if(args.pointWidth > args.bin_width):
+		exit("Point width must not exceed bin width of " + str(args.bin_width) + "px.")
+
+	if(args.pointWidth == -1):
+		args.pointWidth = args.bin_width								# Point fills bin
 
 	args.color = hex2rgb(args.color)									# Color of bins
 

@@ -86,9 +86,13 @@ RAM usage is proportional to the chunksize multiplied by the number of processes
 
 ## Styles
 
-Currently only a bar chart with adjustable colors for the bars and background, however more will be added at a later date!
-
 `-t, --test` Renders a single frame for style testing. Default: False
+
+`-st, --style` Defines render style: bars, points. Default: bars
+
+`-pst, --pointStyle` Defines point style: slab, block, circle. Default: circle
+
+`-pw, --pointWidth` Width of the points in px. Default: bin width
 
 `-c, --color` Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)
 
@@ -111,3 +115,7 @@ Slim bins: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination 
 IKEA: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 12 -c yellow -bgc blue`
 
 <img src="screenshots/IKEA.png" alt="default" style="zoom: 50%;" />
+
+Donut: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 32 -st points -pst donut -c e9388c -bgc f17e06`
+
+<img src="screenshots/Donut.png" alt="default" style="zoom: 50%;" />
