@@ -26,16 +26,16 @@ def initArgs():
 						help="Height of the image in px. Default: 540")
 
 	parser.add_argument("-w", "--width", type=int, default=1920,
-						help="Width of the image in px. Will be overwritten if both bin_width AND bin_spacing is given! Default: 1920")
+						help="Width of the image in px. Will be overwritten if both binWidth AND binSpacing is given! Default: 1920")
 
 	parser.add_argument("-b", "--bins", type=int, default=64,
 						help="Amount of bins (bars, points, etc). Default: 64")
 
-	parser.add_argument("-bw", "--bin_width", type=str, default="auto",
-						help="Width of the bins in px. Default: auto (5/6 * width/bins)")
+	parser.add_argument("-bw", "--binWidth", type=float, default=-1,
+						help="Width of the bins in px. Default: 5/6 * width/bins")
 
-	parser.add_argument("-bs", "--bin_spacing", type=str, default="auto",
-						help="Spacing between bins in px. Default: auto (1/6 * width/bins)")
+	parser.add_argument("-bs", "--binSpacing", type=float, default=-1,
+						help="Spacing between bins in px. Default: 1/6 * width/bins")
 
 	parser.add_argument("-fr", "--framerate", type=float, default=30,
 						help="Framerate of the image sequence (Frames per second). Default: 30")
@@ -44,13 +44,13 @@ def initArgs():
 						help="Which channel to use (left, right, average). Default: average")
 
 	parser.add_argument("-d", "--duration", type=float, default=-1,
-						help="Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1")
+						help="Length of audio input per frame in ms. Default: Duration will be one frame long (1/framerate)")
 
 	parser.add_argument("-s", "--start", type=float, default=0,
-						help="Begins render at <start> seconds. Default: 0")
+						help="Begins render at <start> seconds. Default: Renders from the start of the sound file")
 
 	parser.add_argument("-e", "--end", type=float, default=-1,
-						help="Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1")
+						help="Ends render at <end> seconds. Default: Renders to the end of the sound file")
 
 	parser.add_argument("-xlog", type=float, default=0,
 						help="Scales the X-axis logarithmically to a given base. Default: 0 (linear)")
@@ -59,13 +59,13 @@ def initArgs():
 						help="Scales the Y-axis logarithmically to a given base. Default: 0 (linear)")
 
 	parser.add_argument("-sy", "--smoothY", type=str, default="0",
-						help="Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0")
+						help="Smoothing over <n> adjacent bins. If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0")
 
 	parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
-						help="Limits the range of frequencies to <frequencyStart>Hz and onward. Default: 0")
+						help="Limits the range of frequencies to <frequencyStart>Hz and onward. Default: Starts at lowest frequency")
 
 	parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
-						help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1")
+						help="Limits the range of frequencies to <frequencyEnd>Hz. Default: Ends at highest frequency")
 
 	parser.add_argument("-v", "--video", action='store_true', default=False,
 						help="Additionally creates a video (.mp4) from image sequence. Default: False")
@@ -141,12 +141,12 @@ def processArgs(args, fileData, samplerate):
 	if(args.ylog < 0):
 		exit("Scalar for ylog must not be smaller than 0.")
 
-	if(args.bin_width != "auto"):
-		if(float(args.bin_width) < 1):
+	if(args.binWidth != -1):
+		if(args.binWidth < 1):
 			exit("Bin width must be at least 1px.")
 
-	if(args.bin_spacing != "auto"):
-		if(float(args.bin_spacing) < 0):
+	if(args.binSpacing != -1):
+		if(args.binSpacing < 0):
 			exit("Bin spacing must be 0px or higher")
 
 	if(args.duration != -1):
@@ -214,24 +214,24 @@ def processArgs(args, fileData, samplerate):
 		args.video = 0													# Forces no video when style testing
 		args.videoAudio = 0
 
-	if(args.bin_width == "auto" and args.bin_spacing != "auto"):		# Only bin_spacing is given
-		args.bin_width = args.width/args.bins - float(args.bin_spacing)
-		args.bin_spacing = float(args.bin_spacing)
-	elif(args.bin_width != "auto" and args.bin_spacing == "auto"):		# Only bin_width is given
-		args.bin_width = float(args.bin_width)
-		args.bin_spacing = args.width/args.bins - float(args.bin_width)
-	elif(args.bin_width == "auto" and args.bin_spacing == "auto"):		# Neither is given
-		args.bin_width = args.width/args.bins * (5/6)
-		args.bin_spacing = args.width/args.bins * (1/6)
+	if(args.binWidth == -1 and args.binSpacing != -1):					# Only binSpacing is given
+		args.binWidth = args.width/args.bins - args.binSpacing
+		args.binSpacing = args.binSpacing
+	elif(args.binWidth != -1 and args.binSpacing == -1):				# Only binWidth is given
+		args.binWidth = args.binWidth
+		args.binSpacing = args.width/args.bins - args.binWidth
+	elif(args.binWidth == -1 and args.binSpacing == -1):				# Neither is given
+		args.binWidth = args.width/args.bins * (5/6)
+		args.binSpacing = args.width/args.bins * (1/6)
 	else:																# Both are given (Overwrites width)
-		args.bin_width = float(args.bin_width)
-		args.bin_spacing = float(args.bin_spacing)
+		args.binWidth = args.binWidth
+		args.binSpacing = args.binSpacing
 
-	if(args.pointWidth > args.bin_width):
-		exit("Point width must not exceed bin width of " + str(args.bin_width) + "px.")
+	if(args.pointWidth > args.binWidth):
+		exit("Point width must not exceed bin width of " + str(args.binWidth) + "px.")
 
 	if(args.pointWidth == -1):
-		args.pointWidth = args.bin_width								# Point fills bin
+		args.pointWidth = args.binWidth									# Point fills bin
 
 	args.color = hex2rgb(args.color)									# Color of bins
 
