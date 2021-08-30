@@ -34,15 +34,15 @@ Example for when audio and destination directory are not in the same directory a
 
 
 
-## Optional arguments
+## General
 
 `-h, --help` Shows the standard help message
-
-`-b, --bins` Amount of bins (bars, points, etc). Default: 64
 
 `-ht, --height` Height of the image in px. Default: 540
 
 `-w, --width` Width of the image in px. Will be overwritten if both bin_width AND bin_spacing is given! Default: 1920
+
+`-b, --bins` Amount of bins (bars, points, etc). Default: 64
 
 ` -bw, --bin_width` Width of the bins in px. Default: auto (5/6 * width/bins)
 
@@ -52,17 +52,17 @@ Example for when audio and destination directory are not in the same directory a
 
 `-ch, --channel` Which channel to use (left, right, average). Default: average
 
-`-xlog` Scales the X-axis logarithmically to a given base. Default: 0 (Linear)
-
-`-ylog` Scales the Y-axis logarithmically to a given base. Default: 0 (Linear)
-
 `-d, --duration` Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1
-
-`-sy, --smoothY` Smoothing over past/next \<smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
 
 `-s, --start` Begins render at \<start> seconds. Default: 0
 
 `-e, --end` Ends render at \<end> seconds. If end = -1: Renders to the end of the sound file. Default: -1
+
+`-xlog` Scales the X-axis logarithmically to a given base. Default: 0 (Linear)
+
+`-ylog` Scales the Y-axis logarithmically to a given base. Default: 0 (Linear)
+
+`-sy, --smoothY` Smoothing over past/next \<smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
 
 `-fs, --frequencyStart` Limits the range of frequencies to \<frequencyStart>Hz and onward. Default: 0
 
@@ -72,19 +72,9 @@ Example for when audio and destination directory are not in the same directory a
 
 `-va, --videoAudio` Additionally creates a video (.mp4) from image sequence and audio. Default: False"
 
-`-ds, --disableSmoothing` Disables all smoothing (smoothT and smoothY). Default: False
-
-<br>
-
-`-cs, --chunkSize` Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: auto
-
-`-p, --processes` Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)
-
-RAM usage is proportional to the chunksize multiplied by the number of processes. Per default (auto) the chunksize is set to 128 divided by the number of processes. Ex. 128/4 = chunksize of 32 per processes on a machine with 4 cores and no hyperthreading. You may want to increase the chunksize on a machine with many cores for better performance, as a larger chunksize per process increases speed.
 
 
-
-## Styles
+## Style
 
 `-t, --test` Renders a single frame for style testing. Default: False
 
@@ -99,6 +89,16 @@ RAM usage is proportional to the chunksize multiplied by the number of processes
 `-bgc, --backgroundColor` Color of the background. Ex: ff0000 or red. Default: 000000 (black)
 
 Color names are equal to the named colors supported by HTML and CSS. Colors must be written in lower camel case, ex. `hotPink` not `HotPink`. [Overview of named colors](https://htmlcolorcodes.com/color-names/).
+
+
+
+## Performance
+
+`-cs, --chunkSize` Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: auto
+
+`-p, --processes` Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)
+
+RAM usage is proportional to the chunksize multiplied by the number of processes. Per default (auto) the chunksize is set to 128 divided by the number of processes. Ex. 128/4 = chunksize of 32 per processes on a machine with 4 cores and no hyperthreading. You may want to increase the chunksize on a machine with many cores for better performance, as a larger chunksize per process increases speed.
 
 
 

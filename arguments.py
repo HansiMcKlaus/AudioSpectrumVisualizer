@@ -21,21 +21,61 @@ def initArgs():
 	parser.add_argument("destination", type=str, nargs='?', default="imageSequence",
 						help="Name or path of the created directory in which the image sequence is saved. Default: imageSequence")
 
-	# Optional arguments
-	parser.add_argument("-b", "--bins", type=int, default=64,
-						help="Amount of bins (bars, points, etc). Default: 64")
-
+	# Optional arguments - General
 	parser.add_argument("-ht", "--height", type=int, default=540,
 						help="Height of the image in px. Default: 540")
 
 	parser.add_argument("-w", "--width", type=int, default=1920,
 						help="Width of the image in px. Will be overwritten if both bin_width AND bin_spacing is given! Default: 1920")
 
+	parser.add_argument("-b", "--bins", type=int, default=64,
+						help="Amount of bins (bars, points, etc). Default: 64")
+
 	parser.add_argument("-bw", "--bin_width", type=str, default="auto",
 						help="Width of the bins in px. Default: auto (5/6 * width/bins)")
 
 	parser.add_argument("-bs", "--bin_spacing", type=str, default="auto",
 						help="Spacing between bins in px. Default: auto (1/6 * width/bins)")
+
+	parser.add_argument("-fr", "--framerate", type=float, default=30,
+						help="Framerate of the image sequence (Frames per second). Default: 30")
+
+	parser.add_argument("-ch", "--channel", type=str, default="average",
+						help="Which channel to use (left, right, average). Default: average")
+
+	parser.add_argument("-d", "--duration", type=float, default=-1,
+						help="Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1")
+
+	parser.add_argument("-s", "--start", type=float, default=0,
+						help="Begins render at <start> seconds. Default: 0")
+
+	parser.add_argument("-e", "--end", type=float, default=-1,
+						help="Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1")
+
+	parser.add_argument("-xlog", type=float, default=0,
+						help="Scales the X-axis logarithmically to a given base. Default: 0 (linear)")
+
+	parser.add_argument("-ylog", type=float, default=0,
+						help="Scales the Y-axis logarithmically to a given base. Default: 0 (linear)")
+
+	parser.add_argument("-sy", "--smoothY", type=str, default="0",
+						help="Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0")
+
+	parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
+						help="Limits the range of frequencies to <frequencyStart>Hz and onward. Default: 0")
+
+	parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
+						help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1")
+
+	parser.add_argument("-v", "--video", action='store_true', default=False,
+						help="Additionally creates a video (.mp4) from image sequence. Default: False")
+
+	parser.add_argument("-va", "--videoAudio", action='store_true', default=False,
+					help="Additionally creates a video (.mp4) from image sequence and audio. Default: False")
+
+	# Optional arguments - Style
+	parser.add_argument("-t", "--test", action='store_true', default=False,
+						help="Renders only a single frame for style testing. Default: False")
 
 	parser.add_argument("-st", "--style", type=str, default="bars",
 						help="Defines render style: bars, points. Default: bars")
@@ -52,53 +92,12 @@ def initArgs():
 	parser.add_argument("-bgc", "--backgroundColor", type=str, default="000000",
 						help="Color of the background. Ex: ff0000 or red. Default: 000000 (black)")
 
-	parser.add_argument("-fr", "--framerate", type=float, default=30,
-						help="Framerate of the image sequence (Frames per second). Default: 30")
-
-	parser.add_argument("-ch", "--channel", type=str, default="average",
-						help="Which channel to use (left, right, average). Default: average")
-
-	parser.add_argument("-xlog", type=float, default=0,
-						help="Scales the X-axis logarithmically to a given base. Default: 0 (linear)")
-
-	parser.add_argument("-ylog", type=float, default=0,
-						help="Scales the Y-axis logarithmically to a given base. Default: 0 (linear)")
-
-	parser.add_argument("-d", "--duration", type=float, default=-1,
-						help="Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1")
-
-	parser.add_argument("-sy", "--smoothY", type=str, default="0",
-						help="Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0")
-
-	parser.add_argument("-s", "--start", type=float, default=0,
-						help="Begins render at <start> seconds. Default: 0")
-
-	parser.add_argument("-e", "--end", type=float, default=-1,
-						help="Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1")
-
-	parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
-						help="Limits the range of frequencies to <frequencyStart>Hz and onward. Default: 0")
-
-	parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
-						help="Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1")
-
+	# Optional arguments - Performance
 	parser.add_argument("-cs", "--chunkSize", type=int, default=-1,
 						help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64")
 
 	parser.add_argument("-p", "--processes", type=int, default=-1,
 						help="Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)")
-
-	parser.add_argument("-t", "--test", action='store_true', default=False,
-						help="Renders only a single frame for style testing. Default: False")
-
-	parser.add_argument("-v", "--video", action='store_true', default=False,
-						help="Additionally creates a video (.mp4) from image sequence. Default: False")
-
-	parser.add_argument("-va", "--videoAudio", action='store_true', default=False,
-						help="Additionally creates a video (.mp4) from image sequence and audio. Default: False")
-
-	parser.add_argument("-ds", "--disableSmoothing", action='store_true', default=False,
-						help="Disables all smoothing (smoothT and smoothY). Default: False")
 
 	args = parser.parse_args()
 
@@ -209,8 +208,6 @@ def processArgs(args, fileData, samplerate):
 		exit("Number of processes must be at least 1")
 
 	# Process optional arguments:
-	if(args.disableSmoothing):
-		args.smoothY = 0
 	
 	if(args.test):
 		args.framerate = 30												# Forces framerate when style testing
