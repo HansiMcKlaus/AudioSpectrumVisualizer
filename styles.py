@@ -28,10 +28,16 @@ def renderFrame(args, bins, j):
 	if(args.style == "line"):
 		binSpace = args.height - args.lineThickness
 		for k in range(args.bins - 1):
-			startY = int(np.ceil(bins[j,k]*binSpace))
-			startX = int(k * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
-			endY = int(np.ceil(bins[j,k+1]*binSpace))
-			endX = int((k+1) * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
+			startY = int(bins[j,k]*binSpace)
+			if(k == 0):
+				startX = 0
+			else:
+				startX = int(k * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
+			endY = int(bins[j,k+1]*binSpace)
+			if(k == args.bins - 2):
+				endX = frame.shape[1] - 1
+			else:
+				endX = int((k+1) * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
 			line = np.array((
 				(startY + args.lineThickness, startX),					# Up Left
 				(startY, startX),										# Down Left
@@ -45,10 +51,16 @@ def renderFrame(args, bins, j):
 
 	if(args.style == "fill"):
 		for k in range(args.bins - 1):
-			startY = int(np.ceil(bins[j,k]*args.height))
-			startX = int(k * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
-			endY = int(np.ceil(bins[j,k+1]*args.height))
-			endX = int((k+1) * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
+			startY = int(bins[j,k]*args.height)
+			if(k == 0):
+				startX = 0
+			else:
+				startX = int(k * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
+			endY = int(bins[j,k+1]*args.height)
+			if(k == args.bins - 2):
+				endX = frame.shape[1] - 1
+			else:
+				endX = int((k+1) * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
 			line = np.array((
 				(startY, startX),					# Up Left
 				(0, startX),						# Down Left
