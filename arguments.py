@@ -78,13 +78,10 @@ def initArgs():
 						help="Renders only a single frame for style testing. Default: False")
 
 	parser.add_argument("-st", "--style", type=str, default="bars",
-						help="Defines render style: bars, points, line. Default: bars")
+						help="Defines render style: bars, circles, donuts, line, fill. Default: bars")
 
-	parser.add_argument("-pst", "--pointStyle", type=str, default="circle",
-						help="Defines point style: slab, block, circle. Default: circle")
-
-	parser.add_argument("-pw", "--pointWidth", type=float, default=-1,
-						help="Width of the points in px. Default: bin width")
+	parser.add_argument("-bht", "--barHeight", type=float, default=-1,
+						help="Height of the bars in px. Default: full")
 
 	parser.add_argument("-lt", "--lineThickness", type=float, default=-1,
 					help="Thickness of the line in px. Default: 1")
@@ -129,14 +126,11 @@ def processArgs(args, fileData, samplerate):
 	if(args.channel != "left" and args.channel != "right" and args.channel != "average"):
 		exit("Invalid channel. Valid channels: left, right, average.")
 
-	if(args.style != "bars" and args.style != "points" and args.style != "line" and args.style != "fill"):
-		exit("Style not recognized. Available styles: bars, points.")
+	if(args.style != "bars" and args.style != "circles" and args.style != "donuts" and args.style != "line" and args.style != "fill"):
+		exit("Style not recognized. Available styles: bars, circles, donuts, line, fill.")
 
-	if(args.pointStyle != "slab" and args.pointStyle != "block" and args.pointStyle != "circle" and args.pointStyle != "donut"):
-		exit("Point style not recognized. Available styles: bar, block, circle.")
-
-	if(args.pointWidth < 1 and args.pointWidth != -1):
-		exit("Point width must be at least 1px.")
+	if(args.barHeight < 1 and args.barHeight != -1):
+		exit("Bar height must be at least 1px.")
 
 	if(args.xlog < 0):
 		exit("Scalar for xlog must not be smaller than 0.")
@@ -230,11 +224,8 @@ def processArgs(args, fileData, samplerate):
 		args.binWidth = args.binWidth
 		args.binSpacing = args.binSpacing
 
-	if(args.pointWidth > args.binWidth):
-		exit("Point width must not exceed bin width of " + str(args.binWidth) + "px.")
-
-	if(args.pointWidth == -1):
-		args.pointWidth = args.binWidth									# Point fills bin
+	if(args.barHeight > args.height):
+		exit("Bar height must not exceed image height of " + str(args.height) + "px.")
 
 	args.color = hex2rgb(args.color)									# Color of bins
 

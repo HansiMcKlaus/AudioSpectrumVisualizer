@@ -1,20 +1,19 @@
 # from arguments import args						# Does not work for some reason
 import numpy as np
-# import scikit-image
 from skimage.draw import disk, polygon
 
 def renderFrame(args, bins, j):
 	frame = np.full((args.height, int(args.bins*(args.binWidth+args.binSpacing)), 3), args.backgroundColor)
 	frame = frame.astype(np.uint8)					# Set datatype to uint8 to reduce RAM usage
 
-	if(args.style == "bars"):
+	if(args.style == "bars" and args.barHeight == -1):
 		for k in range(args.bins):
 			frame[int(0):int(np.ceil(bins[j,k]*args.height)),
 			int(k*args.binWidth + k*args.binSpacing):int((k+1)*args.binWidth + k*args.binSpacing)] = args.color
 		frame = np.flipud(frame)
 		return frame
 
-	if(args.style == "points"):
+	if(args.style == "bars" and args.barHeight != -1 or args.style == "circles" or args.style == "donuts"):
 		point = renderPoint(args)
 		binSpace = args.height - point.shape[0]
 		for k in range(args.bins):
@@ -63,21 +62,18 @@ def renderFrame(args, bins, j):
 
 
 def renderPoint(args):
-	if(args.pointStyle == "block"):
-		point = np.full((int(args.pointWidth), int(args.pointWidth), 3), args.color)
+	if(args.style == "bars"):
+		point = np.full((int(args.barHeight), int(args.binWidth), 3), args.color)
 		return point
-	elif(args.pointStyle == "slab"):
-		point = np.full((int(args.pointWidth/2), int(args.pointWidth), 3), args.color)
-		return point
-	elif(args.pointStyle == "circle"):
-		point = np.full((int(args.pointWidth), int(args.pointWidth), 3), args.backgroundColor)
-		rr, cc = disk((int(args.pointWidth/2), int(args.pointWidth/2)), int(args.pointWidth/2))
+	if(args.style == "circles"):
+		point = np.full((int(args.binWidth), int(args.binWidth), 3), args.backgroundColor)
+		rr, cc = disk((int(args.binWidth/2), int(args.binWidth/2)), int(args.binWidth/2))
 		point[rr, cc, :] = args.color
 		return point
-	elif(args.pointStyle == "donut"):
-		point = np.full((int(args.pointWidth), int(args.pointWidth), 3), args.backgroundColor)
-		rr, cc = disk((int(args.pointWidth/2), int(args.pointWidth/2)), int(args.pointWidth/2))
+	if(args.style == "donuts"):
+		point = np.full((int(args.binWidth), int(args.binWidth), 3), args.backgroundColor)
+		rr, cc = disk((int(args.binWidth/2), int(args.binWidth/2)), int(args.binWidth/2))
 		point[rr, cc, :] = args.color
-		rr, cc = disk((int(args.pointWidth/2), int(args.pointWidth/2)), int(args.pointWidth/2 * 0.5))
+		rr, cc = disk((int(args.binWidth/2), int(args.binWidth/2)), int(args.binWidth/2 * 0.5))
 		point[rr, cc, :] = args.backgroundColor
 		return point
