@@ -78,11 +78,9 @@ Example for when audio and destination directory are not in the same directory a
 
 `-t, --test` Renders a single frame for style testing. Default: False
 
-`-st, --style` Defines render style: bars, points. Default: bars
+`-st, --style` Defines render style: bars, circles, donuts, line, fill. Default: bars
 
-`-pst, --pointStyle` Defines point style: slab, block, circle. Default: circle
-
-`-pw, --pointWidth` Width of the points in px. Default: bin width
+`-bht, --barHeight` Height of the bars in px. Default: full
 
 `-c, --color` Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)
 
@@ -114,8 +112,20 @@ Slim bins: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination 
 
 IKEA: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 12 -c yellow -bgc blue`
 
-<img src="screenshots/IKEA.png" alt="default" style="zoom: 50%;" />
+<img src="screenshots/ikea.png" alt="default" style="zoom: 50%;" />
 
-Donut: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 32 -st points -pst donut -c e9388c -bgc f17e06`
+Circles `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -st circles -bw 15`
 
-<img src="screenshots/Donut.png" alt="default" style="zoom: 50%;" />
+<img src="screenshots/circles.png" alt="default" style="zoom: 50%;" />
+
+Donuts: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 32 -st donuts -c e9388c -bgc f17e06`
+
+<img src="screenshots/donuts.png" alt="default" style="zoom: 50%;" />
+
+Line `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 256 -st line -lt 5 -c lime`
+
+<img src="screenshots/line.png" alt="default" style="zoom: 50%;" />
+
+Fill `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 256 -st fill -c lime`
+
+<img src="screenshots/fill.png" alt="default" style="zoom: 50%;" />
