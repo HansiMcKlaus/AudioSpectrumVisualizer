@@ -78,13 +78,16 @@ def initArgs():
 						help="Renders only a single frame for style testing. Default: False")
 
 	parser.add_argument("-st", "--style", type=str, default="bars",
-						help="Defines render style: bars, points. Default: bars")
+						help="Defines render style: bars, points, line. Default: bars")
 
 	parser.add_argument("-pst", "--pointStyle", type=str, default="circle",
 						help="Defines point style: slab, block, circle. Default: circle")
 
 	parser.add_argument("-pw", "--pointWidth", type=float, default=-1,
 						help="Width of the points in px. Default: bin width")
+
+	parser.add_argument("-lt", "--lineThickness", type=float, default=-1,
+					help="Thickness of the line in px. Default: 1")
 
 	parser.add_argument("-c", "--color", type=str, default="ffffff",
 						help="Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)")
@@ -126,7 +129,7 @@ def processArgs(args, fileData, samplerate):
 	if(args.channel != "left" and args.channel != "right" and args.channel != "average"):
 		exit("Invalid channel. Valid channels: left, right, average.")
 
-	if(args.style != "bars" and args.style != "points"):
+	if(args.style != "bars" and args.style != "points" and args.style != "line" and args.style != "fill"):
 		exit("Style not recognized. Available styles: bars, points.")
 
 	if(args.pointStyle != "slab" and args.pointStyle != "block" and args.pointStyle != "circle" and args.pointStyle != "donut"):

@@ -1,7 +1,7 @@
 # from arguments import args						# Does not work for some reason
 import numpy as np
 # import scikit-image
-from skimage.draw import disk
+from skimage.draw import disk, polygon
 
 def renderFrame(args, bins, j):
 	frame = np.full((args.height, int(args.bins*(args.binWidth+args.binSpacing)), 3), args.backgroundColor)
@@ -25,6 +25,42 @@ def renderFrame(args, bins, j):
 			binStart + offset:binStart + point.shape[1] + offset] = point
 		frame = np.flipud(frame)
 		return frame
+
+	if(args.style == "line"):
+		binSpace = args.height - args.lineThickness
+		for k in range(args.bins - 1):
+			startY = int(np.ceil(bins[j,k]*binSpace))
+			startX = int(k * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
+			endY = int(np.ceil(bins[j,k+1]*binSpace))
+			endX = int((k+1) * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
+			line = np.array((
+				(startY + args.lineThickness, startX),					# Up Left
+				(startY, startX),										# Down Left
+				(endY, endX),											# Down Right
+				(endY + args.lineThickness, endX),						# Up Right
+			))
+			start, end = polygon(line[:, 0], line[:, 1], frame.shape)
+			frame[start, end] = args.color
+		frame = np.flipud(frame)
+		return frame
+
+	if(args.style == "fill"):
+		for k in range(args.bins - 1):
+			startY = int(np.ceil(bins[j,k]*args.height))
+			startX = int(k * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
+			endY = int(np.ceil(bins[j,k+1]*args.height))
+			endX = int((k+1) * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
+			line = np.array((
+				(startY, startX),					# Up Left
+				(0, startX),						# Down Left
+				(0, endX),							# Down Right
+				(endY, endX),						# Up Right
+			))
+			start, end = polygon(line[:, 0], line[:, 1], frame.shape)
+			frame[start, end] = args.color
+		frame = np.flipud(frame)
+		return frame
+
 
 def renderPoint(args):
 	if(args.pointStyle == "block"):
