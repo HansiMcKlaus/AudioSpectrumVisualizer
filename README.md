@@ -36,6 +36,8 @@ Example for when audio and destination directory are not in the same directory a
 
 ## General
 
+`-ps, --preset` Name of a preset defined as a collection of flags in presets.txt. Default: default. Note that the default preset is blank on a fresh install, feel free to define it as you like
+
 `-h, --help` Shows the standard help message
 
 `-ht, --height` Height of the image in px. Default: 540
