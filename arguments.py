@@ -1,6 +1,8 @@
 from color import hex2rgb							# Handles colors
 
 import argparse
+import sys
+import os
 from joblib import cpu_count
 
 args = None
@@ -22,6 +24,9 @@ def initArgs():
 						help="Name or path of the created directory in which the image sequence is saved. Default: imageSequence")
 
 	# Optional arguments - General
+	parser.add_argument("-ps", "--preset", type=str, default="default",
+						help="Name of a preset defined as a collection of flags in presets.txt. Default: default")
+
 	parser.add_argument("-ht", "--height", type=int, default=540,
 						help="Height of the image in px. Default: 540")
 
@@ -99,10 +104,42 @@ def initArgs():
 	parser.add_argument("-p", "--processes", type=int, default=-1,
 						help="Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)")
 
+
+	# Parse arguments once to get preset flag
+	args = parser.parse_args()
+
+	userArgs = sys.argv
+	presetArgs = parsePreset(userArgs[0], args.preset)
+	sys.argv = userArgs[0:1]
+	sys.argv.extend(presetArgs)
+	sys.argv.extend(userArgs[1:])
+
+	# Parse arguments a second time after appending flags specified by preset
 	args = parser.parse_args()
 
 	return args
 
+def parsePreset(scriptDirectory, argPreset):
+	pathToPresets = changePath(scriptDirectory, "presets.txt")
+	presetsFile = open(pathToPresets)
+	lines = presetsFile.readlines()
+	presetsFile.close()
+
+	presets = []
+	for line in lines:
+		preset = line.split()[0]
+		presets.append(preset)
+
+	if argPreset in presets:
+		lineNum = presets.index(argPreset)
+		return lines[lineNum].split()[1:]
+	else:
+		exit("Preset doesn't exist.")
+
+def changePath(pathToExec, filename):
+	path = os.path.split(pathToExec)[0]
+	path = os.path.join(path, filename)
+	return path
 
 """
 Exits on invalid inputs and processes arguments that can not be calculated independently.

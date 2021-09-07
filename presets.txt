@@ -1,0 +1,3 @@
+default 
+pretty -fe 8000 -d 100 -ht 1080
+test -fr 13 -ht 418 -va -fs 520
