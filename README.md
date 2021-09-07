@@ -84,6 +84,10 @@ Example for when audio and destination directory are not in the same directory a
 
 `-bht, --barHeight` Height of the bars in px. Default: full
 
+`-lt, --lineThickness` Thickness of the line in px. Default: 1
+
+`-m, --mirror` Mirros the spectrum at y-axis. 1: Middle, 2: Top/Bottom Default: 0
+
 `-c, --color` Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)
 
 `-bgc, --backgroundColor` Color of the background. Ex: ff0000 or red. Default: 000000 (black)
@@ -131,3 +135,11 @@ Line `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder
 Fill `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 256 -st fill -c lime`
 
 <img src="screenshots/fill.png" alt="default" style="zoom: 50%;" />
+
+Mirror 1 `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -m 1`
+
+<img src="screenshots/mirror1.png" alt="default" style="zoom: 50%;" />
+
+Mirror 2 `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -m 2`
+
+<img src="screenshots/mirror2.png" alt="default" style="zoom: 50%;" />

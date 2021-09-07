@@ -90,6 +90,9 @@ def initArgs():
 
 	parser.add_argument("-lt", "--lineThickness", type=float, default=1,
 					help="Thickness of the line in px. Default: 1")
+	
+	parser.add_argument("-m", "--mirror", type=int, default=0,
+					help="Mirros the spectrum at y-axis. 1: middle, 2: top/bottom Default: 0")
 
 	parser.add_argument("-c", "--color", type=str, default="ffffff",
 						help="Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)")
@@ -168,6 +171,12 @@ def processArgs(args, fileData, samplerate):
 
 	if(args.barHeight < 1 and args.barHeight != -1):
 		exit("Bar height must be at least 1px.")
+
+	if(args.lineThickness < 1):
+		exit("Line thicknes must be at least 1px.")
+
+	if(args.mirror < 0 or args.mirror > 2):
+		exit("Mirror argument only accepts 0 (off), 1 (middle), 2 (top/bottom).")
 
 	if(args.xlog < 0):
 		exit("Scalar for xlog must not be smaller than 0.")
