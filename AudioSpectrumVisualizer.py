@@ -12,6 +12,7 @@ from styles import renderFrame						# Handles styles
 from audio2numpy import open_audio					# Works with several audio formats, including .mp3 (Uses ffmpeg as subroutine)
 from time import time
 import numpy as np
+import cv2
 import matplotlib.pyplot as plt
 from os import mkdir, path
 from sys import exit, stdout, stderr
@@ -142,17 +143,27 @@ def renderSaveFrames(bins):
 	if(path.exists(args.destination) == False and not args.test):
 		mkdir(args.destination)
 
-	frameCounter = Manager().dict()
-	frameCounter['c'] = 0
-	Parallel(n_jobs=args.processes)(delayed(renderSaveChunk)(j, numChunks, bins, frameCounter) for j in range(numChunks))
+	shMem = Manager().dict()
+	shMem['framecount'] = 0
+	shMem['frames'] = np.empty(len(bins), dtype=object)
+	Parallel(n_jobs=args.processes)(delayed(renderSaveChunk)(j, numChunks, bins, shMem) for j in range(numChunks))
+
+	fourcc = cv2.VideoWriter_fourcc(*'H264')
+	vid = cv2.VideoWriter(args.destination, fourcc, args.framerate, (args.width, args.height))
+
+	for frame in shMem['frames']:
+		vid.write(frame)
+		#shMem['framecount'] += 1
+		#printProgressBar(shMem['framecount'], len(bins))
 
 	printProgressBar(len(bins), len(bins))
 	print()												# New line after progress bar
+	vid.release()
 
 """
 Renders and exports one chunk worth of frames
 """
-def renderSaveChunk(chunkCounter, numChunks, bins, frameCounter):
+def renderSaveChunk(chunkCounter, numChunks, bins, shMem):
 	start = chunkCounter * args.chunkSize
 	end = (chunkCounter+1) * args.chunkSize
 
@@ -171,7 +182,14 @@ def renderSaveChunk(chunkCounter, numChunks, bins, frameCounter):
 		end = len(bins)
 
 	frames = renderChunkFrames(bins, start, end)
-	saveChunkImages(frames, start, len(bins), frameCounter)
+	counter = start
+	for frame in frames:
+		shMem['frames'][counter] = frame
+		shMem['framecount'] += 1
+		printProgressBar(shMem['framecount'], len(bins))
+		counter += 1
+
+	#saveChunkImages(frames, start, len(bins), shMem)
 
 """
 Renders one chunk of frames
@@ -186,18 +204,18 @@ def renderChunkFrames(bins, start, end):
 """
 Exports one chunk of frames as a .png image sequence into it.
 """
-def saveChunkImages(frames, start, length, frameCounter):
+def saveChunkImages(frames, start, length, shMem):
 	# Save image sequence
 	if(args.test):
 		for i in range(len(frames)):
 			plt.imsave("testFrame.png", frames[i], vmin=0, vmax=255, cmap='gray')
-			frameCounter['c'] += 1
-			printProgressBar(frameCounter['c'], length)
+			shMem['framecount'] += 1
+			printProgressBar(shMem['framecount'], length)
 	else:
 		for i in range(len(frames)):
 			plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], vmin=0, vmax=255, cmap='gray')
-			frameCounter['c'] += 1
-			printProgressBar(frameCounter['c'], length)
+			shMem['framecount'] += 1
+			printProgressBar(shMem['framecount'], length)
 
 """
 Progress Bar (Modified from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
