@@ -19,8 +19,6 @@ from joblib import Parallel, delayed
 from multiprocessing import Manager
 import subprocess
 
-args = initArgs()									# Arguments as global variables
-
 
 """
 Loads audio file.
@@ -256,6 +254,8 @@ def createVideo():
 Main method. Initializes the complete process from start to finish.
 """
 if __name__ == '__main__':
+	args = initArgs()									# Arguments as global variables
+
 	startTime = time()
 
 	fileData, samplerate = loadAudio()

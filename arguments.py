@@ -2,6 +2,7 @@ from color import hex2rgb							# Handles colors
 
 import argparse
 import sys
+import os
 from joblib import cpu_count
 
 args = None
@@ -107,26 +108,20 @@ def initArgs():
 	# Parse arguments once to get preset flag
 	args = parser.parse_args()
 
-	# Count number of positional arguments explicitly set
-	posArgs = 0
-	for arg in sys.argv:
-		if arg[0] == '-':
-			break
-		posArgs += 1
-
 	userArgs = sys.argv
-	presetArgs = parsePreset(args.preset)
-	sys.argv = userArgs[0:posArgs]
+	presetArgs = parsePreset(userArgs[0], args.preset)
+	sys.argv = userArgs[0:1]
 	sys.argv.extend(presetArgs)
-	sys.argv.extend(userArgs[posArgs:])
+	sys.argv.extend(userArgs[1:])
 
 	# Parse arguments a second time after appending flags specified by preset
 	args = parser.parse_args()
 
 	return args
 
-def parsePreset(argPreset):
-	presetsFile = open("presets.txt")
+def parsePreset(scriptDirectory, argPreset):
+	pathToPresets = changePath(scriptDirectory, "presets.txt")
+	presetsFile = open(pathToPresets)
 	lines = presetsFile.readlines()
 	presetsFile.close()
 
@@ -141,6 +136,10 @@ def parsePreset(argPreset):
 	else:
 		exit("Preset doesn't exist.")
 
+def changePath(pathToExec, filename):
+	path = os.path.split(pathToExec)[0]
+	path = os.path.join(path, filename)
+	return path
 
 """
 Exits on invalid inputs and processes arguments that can not be calculated independently.
