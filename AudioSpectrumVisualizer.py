@@ -231,14 +231,18 @@ def createVideo():
 		if(args.end != -1):
 			arguments += ['-t', str(args.end - args.start)]
 
+	hex = '{:02x}{:02x}{:02x}'.format(args.backgroundColor[0], args.backgroundColor[1], args.backgroundColor[2])
 	arguments += [
+		'-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2:0:oh-ih:color={}'.format(hex),
 		'-c:v', 'libx264',
 		'-preset', 'ultrafast',
 		'-crf', '16',
 		'-pix_fmt', 'yuv420p',
 		'-y', '{}.mp4'.format(args.destination)
 	]
-	
+
+	if(args.height % 2 == 1 or args.width % 2 == 1):
+		print("Warning: Image height and or width is uneven. Applying padding.")
 	print("Converting image sequence to video.")
 
 	proc = subprocess.Popen(
