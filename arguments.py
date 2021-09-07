@@ -88,7 +88,7 @@ def initArgs():
 	parser.add_argument("-bht", "--barHeight", type=float, default=-1,
 						help="Height of the bars in px. Default: full")
 
-	parser.add_argument("-lt", "--lineThickness", type=float, default=-1,
+	parser.add_argument("-lt", "--lineThickness", type=float, default=1,
 					help="Thickness of the line in px. Default: 1")
 
 	parser.add_argument("-c", "--color", type=str, default="ffffff",

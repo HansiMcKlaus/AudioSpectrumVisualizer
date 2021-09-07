@@ -124,7 +124,7 @@ Donuts: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Fol
 
 <img src="screenshots/donuts.png" alt="default" style="zoom: 50%;" />
 
-Line `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 256 -st line -lt 5 -c lime`
+Line `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 256 -st line -lt 3 -c lime`
 
 <img src="screenshots/line.png" alt="default" style="zoom: 50%;" />
 
