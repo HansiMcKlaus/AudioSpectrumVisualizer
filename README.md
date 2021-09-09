@@ -13,6 +13,7 @@ This script requires [ffmpeg](https://ffmpeg.org/download.html).
   - Linux:
     - Debian/Ubuntu: `sudo apt-get install ffmpeg`
     - Arch: `sudo pacman -S ffmpeg`
+  - macOS: `homebrew install ffmpeg`
   - Windows:
     1. [Download ffmpeg](https://ffmpeg.org/download.html)
     2. Extract it into a folder, for example `C:\FFmpeg`

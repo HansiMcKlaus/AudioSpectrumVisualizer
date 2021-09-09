@@ -1,5 +1,6 @@
 numpy
-audio2numpy
+#audio2numpy
+git+https://github.com/irgendwr/audio2numpy
 matplotlib
 joblib
 scikit-image
