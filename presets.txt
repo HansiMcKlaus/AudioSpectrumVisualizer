@@ -1,3 +1,11 @@
 default 
+slimBins -b 128 -bw 5
+ikea -b 12 -c yellow -bgc blue
+circles -st circles -bw 15
+donuts -b 32 -st donuts -c e9388c -bgc f17e06
+line -b 256 -st line -lt 3 -c lime
+fill -b 256 -st fill -c lime
+mirror1 -m 1
+mirror2 -m 2
 pretty -fe 8000 -d 100 -ht 1080
 test -fr 13 -ht 418 -va -fs 520

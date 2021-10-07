@@ -77,7 +77,6 @@ def renderFrame(args, bins, j):
 		fullFrame[:frame.shape[0],:] = np.flipud(frame)
 		fullFrame[frame.shape[0]:frame.shape[0]*2,:] = frame
 		frame = fullFrame
-	print(frame.shape)
 	return frame
 
 
