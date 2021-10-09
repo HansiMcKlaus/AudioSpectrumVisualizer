@@ -163,10 +163,10 @@ def processArgs(args, fileData, samplerate):
 	if(args.framerate <= 0):
 		exit("Framerate must be at least 1.")
 
-	if(args.channel != "left" and args.channel != "right" and args.channel != "average"):
+	if(args.channel not in ["left", "right", "average"]):
 		exit("Invalid channel. Valid channels: left, right, average.")
 
-	if(args.style != "bars" and args.style != "circles" and args.style != "donuts" and args.style != "line" and args.style != "fill"):
+	if(args.style not in ["bars", "circles", "donuts", "line", "fill"]):
 		exit("Style not recognized. Available styles: bars, circles, donuts, line, fill.")
 
 	if(args.barHeight < 1 and args.barHeight != -1):

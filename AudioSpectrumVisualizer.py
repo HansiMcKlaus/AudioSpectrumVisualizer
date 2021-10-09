@@ -41,7 +41,7 @@ Processes data from <FILENAME> and assigns data to its respective frame.
 """
 def calculateFrameData(fileData, samplerate):
 	# Averages multiple channels into a mono channel
-	if(len(fileData.shape) == 2):
+	if(len(fileData.shape) > 1):
 		if(args.channel == "average"):
 			fileData = np.mean(fileData, axis=1)
 		elif(args.channel == "left"):
