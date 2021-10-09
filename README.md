@@ -53,7 +53,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-fr, --framerate` Framerate of the image sequence (Frames per second). Default: 30
 
-`-ch, --channel` Which channel to use (left, right, average). Default: average
+`-ch, --channel` Which channel to use (left, right, average, stereo). Default: average
 
 `-d, --duration` Length of audio input per frame in ms. Default: Duration will be one frame long (1/framerate)
 
@@ -87,7 +87,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-lt, --lineThickness` Thickness of the line in px. Default: 1
 
-`-m, --mirror` Mirros the spectrum at y-axis. 1: Middle, 2: Top/Bottom Default: 0
+`-m, --mirror` Mirros the spectrum at y-axis. 1: Middle, 2: Top/Bottom Default: 0 or 1 if channel=stereo
 
 `-c, --color` Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)
 

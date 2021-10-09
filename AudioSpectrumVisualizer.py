@@ -136,7 +136,8 @@ def renderSaveFrames(bins):
 		div = np.log2(args.ylog + 1)						# Constant for y-scaling
 		bins = np.log2(args.ylog * np.array(bins) + 1)/div	# Y-scaling
 
-	numChunks = int(np.ceil(len(bins)/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
+	numBins = len(bins) if args.channel != "stereo" else len(bins[0])
+	numChunks = int(np.ceil(numBins/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
 
 	# Create destination folder
 	if(path.exists(args.destination) == False and not args.test):
@@ -146,7 +147,7 @@ def renderSaveFrames(bins):
 	frameCounter['c'] = 0
 	Parallel(n_jobs=args.processes)(delayed(renderSaveChunk)(j, numChunks, bins, frameCounter) for j in range(numChunks))
 
-	printProgressBar(len(bins), len(bins))
+	printProgressBar(numBins, numBins)
 	print()												# New line after progress bar
 
 """
@@ -155,32 +156,57 @@ Renders and exports one chunk worth of frames
 def renderSaveChunk(chunkCounter, numChunks, bins, frameCounter):
 	start = chunkCounter * args.chunkSize
 	end = (chunkCounter+1) * args.chunkSize
+	numBins = len(bins) if args.channel != "stereo" else len(bins[0])
 
 	remainingChunks = numChunks - chunkCounter
 	if(remainingChunks <= args.processes):
 		completedChunkSets = int(numChunks/args.processes) - 1
 		fullSetChunks = completedChunkSets * args.processes
 		fullSetFrames = fullSetChunks * args.chunkSize
-		remainingFrames = len(bins) - fullSetFrames
+		remainingFrames = numBins - fullSetFrames
 		remainderChunkSize = int(remainingFrames/args.processes)
 		remainderChunkNum = chunkCounter - fullSetChunks
 		start = fullSetFrames + remainderChunkNum * remainderChunkSize
 		end = fullSetFrames + (remainderChunkNum+1) * remainderChunkSize
 
 	if(numChunks == chunkCounter+1):			# Sets the last chunk to do all frames that might be left over, to fix possible rounding errors etc.
-		end = len(bins)
+		end = numBins
 
 	frames = renderChunkFrames(bins, start, end)
-	saveChunkImages(frames, start, len(bins), frameCounter)
+	saveChunkImages(frames, start, numBins, frameCounter)
 
 """
 Renders one chunk of frames
 """
 def renderChunkFrames(bins, start, end):
 	frames = []
-	for j in range(start, end):
-		frame = renderFrame(args, bins, j)
-		frames.append(frame)
+
+	if(args.channel != "stereo"):
+		for j in range(start, end):
+			frame = renderFrame(args, bins, j)
+			frames.append(frame)
+	else:
+		mirror = args.mirror
+		height = args.height
+		halfHeight = int(height/2)
+		args.height = halfHeight
+		args.mirror = 0
+	
+		for j in range(start, end):
+			fullFrame = np.full((height, int(args.bins*(args.binWidth+args.binSpacing)), 3), args.backgroundColor)
+			fullFrame = fullFrame.astype(np.uint8)
+			
+			channelFrames = (renderFrame(args, bins[0], j),
+			                 renderFrame(args, bins[1], j))
+
+			if(mirror == 2):
+				fullFrame[:halfHeight,:] = np.flipud(channelFrames[0])
+				fullFrame[halfHeight:height,:] = channelFrames[1]
+			else: # default is 1:
+				fullFrame[:halfHeight,:] = channelFrames[0]
+				fullFrame[halfHeight:height,:] = np.flipud(channelFrames[1])
+			frames.append(fullFrame)
+	
 	return frames
 
 """
@@ -266,11 +292,19 @@ if __name__ == '__main__':
 	processArgs(args, fileData, samplerate)
 	print("Audio succesfully loaded. (1/4)")
 
-	frameData = calculateFrameData(fileData, samplerate)
+	if(args.channel == "stereo"):
+		frameData = (calculateFrameData(fileData[:,0], samplerate),
+		             calculateFrameData(fileData[:,1], samplerate))
+	else:
+		frameData = calculateFrameData(fileData, samplerate)
 	del fileData, samplerate
 	print("Frame data created. (2/4)")
 
-	bins = createBins(frameData)
+	if(args.channel == "stereo"):
+		bins = (createBins(frameData[0]),
+		        createBins(frameData[1]))
+	else:
+		bins = createBins(frameData)
 	if(args.smoothY > 0):
 		bins = smoothBinData(bins)
 	del frameData

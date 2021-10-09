@@ -92,7 +92,7 @@ def initArgs():
 					help="Thickness of the line in px. Default: 1")
 	
 	parser.add_argument("-m", "--mirror", type=int, default=0,
-					help="Mirros the spectrum at y-axis. 1: middle, 2: top/bottom Default: 0")
+					help="Mirros the spectrum at y-axis. 1: middle, 2: top/bottom Default: 0 or 1 if channel=stereo")
 
 	parser.add_argument("-c", "--color", type=str, default="ffffff",
 						help="Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)")
@@ -163,8 +163,8 @@ def processArgs(args, fileData, samplerate):
 	if(args.framerate <= 0):
 		exit("Framerate must be at least 1.")
 
-	if(args.channel not in ["left", "right", "average"]):
-		exit("Invalid channel. Valid channels: left, right, average.")
+	if(args.channel not in ["left", "right", "average", "stereo"]):
+		exit("Invalid channel. Valid channels: left, right, average, stereo.")
 
 	if(args.style not in ["bars", "circles", "donuts", "line", "fill"]):
 		exit("Style not recognized. Available styles: bars, circles, donuts, line, fill.")

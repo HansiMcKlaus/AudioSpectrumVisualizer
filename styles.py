@@ -70,13 +70,13 @@ def renderFrame(args, bins, j):
 
 	frame = np.flipud(frame)
 	if(args.mirror == 1):
-		fullFrame[:frame.shape[0],:] = frame
-		fullFrame[frame.shape[0]:frame.shape[0]*2,:] = np.flipud(frame)
-		frame = fullFrame
+		fullFrame[:height,:] = frame
+		fullFrame[height:height*2,:] = np.flipud(frame)
+		return fullFrame
 	elif(args.mirror == 2):
-		fullFrame[:frame.shape[0],:] = np.flipud(frame)
-		fullFrame[frame.shape[0]:frame.shape[0]*2,:] = frame
-		frame = fullFrame
+		fullFrame[:height,:] = np.flipud(frame)
+		fullFrame[height:height*2,:] = frame
+		return fullFrame
 	return frame
 
 
