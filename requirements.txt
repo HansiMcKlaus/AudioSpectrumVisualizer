@@ -3,3 +3,4 @@ audio2numpy
 matplotlib
 joblib
 scikit-image
+opencv-python

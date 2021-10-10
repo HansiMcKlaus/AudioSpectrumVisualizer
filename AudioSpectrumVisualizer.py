@@ -137,6 +137,7 @@ def renderSaveFrames(bins):
 		div = np.log2(args.ylog + 1)						# Constant for y-scaling
 		bins = np.log2(args.ylog * np.array(bins) + 1)/div	# Y-scaling
 
+	args.processes = 1
 	numChunks = int(np.ceil(len(bins)/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
 
 	# Create destination folder
@@ -145,49 +146,54 @@ def renderSaveFrames(bins):
 
 	shMem = Manager().dict()
 	shMem['framecount'] = 0
-	shMem['frames'] = np.empty(len(bins), dtype=object)
-	Parallel(n_jobs=args.processes)(delayed(renderSaveChunk)(j, numChunks, bins, shMem) for j in range(numChunks))
-
-	fourcc = cv2.VideoWriter_fourcc(*'H264')
-	vid = cv2.VideoWriter(args.destination, fourcc, args.framerate, (args.width, args.height))
-
-	for frame in shMem['frames']:
-		vid.write(frame)
-		#shMem['framecount'] += 1
-		#printProgressBar(shMem['framecount'], len(bins))
+	Parallel(n_jobs=args.processes)(delayed(renderSavePartial)(j, numChunks, bins, shMem) for j in range(args.processes))
 
 	printProgressBar(len(bins), len(bins))
 	print()												# New line after progress bar
+
+"""
+Renders and saves one process' share of frames in chunks
+"""
+def renderSavePartial(partialCounter, numChunks, bins, shMem):
+	fourcc = cv2.VideoWriter_fourcc(*'H264')
+	vid = cv2.VideoWriter(args.destination+str(partialCounter), fourcc, args.framerate, (args.width, args.height))
+
+	chunksPerProcess = int(numChunks/args.processes)
+	for i in range(chunksPerProcess):
+		chunkCounter = partialCounter*chunksPerProcess + i
+		renderSaveChunk(chunkCounter, numChunks, bins, vid, shMem)
+
 	vid.release()
 
 """
 Renders and exports one chunk worth of frames
 """
-def renderSaveChunk(chunkCounter, numChunks, bins, shMem):
-	start = chunkCounter * args.chunkSize
-	end = (chunkCounter+1) * args.chunkSize
+def renderSaveChunk(chunkCounter, numChunks, bins, vid, shMem):
+	chunksPerProcess = int(numChunks/args.processes)
+	finishedChunkSets = int(chunkCounter/chunksPerProcess)
+	framesPerProcess = int(len(bins)/args.processes)
+	currentChunkNumInNewSet = chunkCounter - finishedChunkSets * chunksPerProcess
+	start = finishedChunkSets * framesPerProcess + currentChunkNumInNewSet * args.chunkSize
+	end = start + args.chunkSize
 
-	remainingChunks = numChunks - chunkCounter
-	if(remainingChunks <= args.processes):
-		completedChunkSets = int(numChunks/args.processes) - 1
-		fullSetChunks = completedChunkSets * args.processes
+	if(chunkCounter % chunksPerProcess == chunksPerProcess - 1):
+		completeChunkSets = int(numChunks/args.processes) - 1
+		fullSetChunks = completeChunkSets * args.processes
 		fullSetFrames = fullSetChunks * args.chunkSize
 		remainingFrames = len(bins) - fullSetFrames
 		remainderChunkSize = int(remainingFrames/args.processes)
-		remainderChunkNum = chunkCounter - fullSetChunks
-		start = fullSetFrames + remainderChunkNum * remainderChunkSize
-		end = fullSetFrames + (remainderChunkNum+1) * remainderChunkSize
+		end = start + remainderChunkSize
 
-	if(numChunks == chunkCounter+1):			# Sets the last chunk to do all frames that might be left over, to fix possible rounding errors etc.
+	if(chunkCounter == numChunks - 1):			# Sets the last chunk to do all frames that might be left over, to fix possible rounding errors etc.
 		end = len(bins)
 
+	#print("numChunks: "+ str(numChunks) +" chunkCounter: " + str(chunkCounter) + " Start: "+ str(start) +" End: "+ str(end) + "\n")
+
 	frames = renderChunkFrames(bins, start, end)
-	counter = start
 	for frame in frames:
-		shMem['frames'][counter] = frame
+		vid.write(frame)
 		shMem['framecount'] += 1
 		printProgressBar(shMem['framecount'], len(bins))
-		counter += 1
 
 	#saveChunkImages(frames, start, len(bins), shMem)
 
