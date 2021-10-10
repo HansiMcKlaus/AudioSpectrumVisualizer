@@ -137,7 +137,6 @@ def renderSaveFrames(bins):
 		div = np.log2(args.ylog + 1)						# Constant for y-scaling
 		bins = np.log2(args.ylog * np.array(bins) + 1)/div	# Y-scaling
 
-	args.processes = 1
 	numChunks = int(np.ceil(len(bins)/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
 
 	# Create destination folder
@@ -155,8 +154,8 @@ def renderSaveFrames(bins):
 Renders and saves one process' share of frames in chunks
 """
 def renderSavePartial(partialCounter, numChunks, bins, shMem):
-	fourcc = cv2.VideoWriter_fourcc(*'H264')
-	vid = cv2.VideoWriter(args.destination+str(partialCounter), fourcc, args.framerate, (args.width, args.height))
+	fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+	vid = cv2.VideoWriter(args.destination+"/vid"+str(partialCounter)+".avi", fourcc, args.framerate, (args.width, args.height))
 
 	chunksPerProcess = int(numChunks/args.processes)
 	for i in range(chunksPerProcess):
@@ -239,6 +238,25 @@ Creates a video from an image sequence.
 Returns ffmpeg's exit status (0 on success).
 """
 def createVideo():
+	vidList = open(args.destination+"/vidList", "x")
+	for i in range(args.processes):
+		vidList.write("file '{}'\n".format(args.destination+"/vid"+str(i)+".avi"))
+	vidList.close()
+
+	arguments = [
+		'ffmpeg',
+		'-f',
+		'concat',
+		'-safe',
+		'0',
+		'-i',
+		args.destination+"/vidList",
+		'-c',
+		'copy',
+		args.destination+"/finishedVid.avi"
+	]
+
+	"""
 	arguments = [
 		'ffmpeg',
 		'-hide_banner',
@@ -268,6 +286,7 @@ def createVideo():
 	if(args.height % 2 == 1 or args.width % 2 == 1):
 		print("Warning: Image height and or width is uneven. Applying padding.")
 	print("Converting image sequence to video.")
+	"""
 
 	proc = subprocess.Popen(
 		arguments,
