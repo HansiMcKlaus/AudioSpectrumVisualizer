@@ -93,7 +93,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-bgc, --backgroundColor` Color of the background. Ex: ff0000 or red. Default: 000000 (black)
 
-Color names are equal to the named colors supported by HTML and CSS. Colors must be written in lower camel case, ex. `hotPink` not `HotPink`. [Overview of named colors](https://htmlcolorcodes.com/color-names/).
+Color names are equal to the named colors supported by HTML and CSS: [Overview of named colors](https://htmlcolorcodes.com/color-names/).
 
 
 
