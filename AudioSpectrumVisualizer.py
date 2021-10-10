@@ -6,6 +6,7 @@ Co-authors: Jannick Kremer, Jonas Bögle
 Creates a customizable image sequence for the spectrum of an audio file.
 """
 
+import os
 from arguments import args, initArgs, processArgs	# Handles arguments
 from styles import renderFrame						# Handles styles
 
@@ -245,25 +246,16 @@ def createVideo():
 
 	arguments = [
 		'ffmpeg',
-		'-f',
-		'concat',
+		'-hide_banner',
+		'-loglevel', 'error',
+		'-stats',
+		'-f', 'concat',
 		'-safe',
 		'0',
 		'-i',
 		args.destination+"/vidList",
-		'-c',
-		'copy',
-		args.destination+"/finishedVid.avi"
-	]
-
-	"""
-	arguments = [
-		'ffmpeg',
-		'-hide_banner',
-		'-loglevel', 'error',
-		'-stats',
-		'-r', str(args.framerate),
-		'-i', '{}/%0d.png'.format(args.destination)
+		'-c', 'copy',
+		'-y', args.destination+'/finishedVideo.mp4'
 	]
 
 	if(args.videoAudio):
@@ -279,14 +271,12 @@ def createVideo():
 		'-c:v', 'libx264',
 		'-preset', 'ultrafast',
 		'-crf', '16',
-		'-pix_fmt', 'yuv420p',
-		'-y', '{}.mp4'.format(args.destination)
+		'-pix_fmt', 'yuv420p'
 	]
 
 	if(args.height % 2 == 1 or args.width % 2 == 1):
 		print("Warning: Image height and or width is uneven. Applying padding.")
 	print("Converting image sequence to video.")
-	"""
 
 	proc = subprocess.Popen(
 		arguments,
@@ -329,6 +319,9 @@ if __name__ == '__main__':
 	if(args.videoAudio or args.video):
 		if createVideo() != 0:
 			exit("ffmpeg exited with a failure.")
+		os.remove(args.destination+"/vidList")
+		for i in range(args.processes):
+			os.remove(args.destination+"/vid"+str(i)+".avi")
 		
 		processTime = time() - startTime
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
