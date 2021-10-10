@@ -176,12 +176,17 @@ def hex2rgb(hex):
 	if hex.lower() in colors:
 		return colors[hex.lower()]
 	else:
-		if(len(hex) != 6):
-			exit("Color is not a valid HEX code, eg. ff0000.")
-		try:
+		hexLen = len(hex)
 		color = []
+		try:
+			if hexLen == 6:
 				for i in (0, 2, 4):
 					color.append(int(hex[i:i+2], 16))
+			elif hexLen == 3:
+				for i in (0, 1, 2):
+					color.append(int(hex[i:i+1]*2, 16))
+			else:
+				exit("Color is not a valid HEX code, eg. ff0000.")
 			return color
 		except:
 			exit("Color is neither a named color (e.g. red) or a valid HEX code (eg. ff0000).")
