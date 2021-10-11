@@ -1,7 +1,7 @@
 from sys import exit
 
 """
-This dictionary contains all named colors.
+Dictionary that maps colors names to their [R, G, B] values.
 """
 colors = {
 	# No color
