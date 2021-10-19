@@ -241,7 +241,7 @@ Returns ffmpeg's exit status (0 on success).
 def createVideo():
 	vidList = open(args.destination+"/vidList", "x")
 	for i in range(args.processes):
-		vidList.write("file '{}'\n".format(args.destination+"/vid"+str(i)+".avi"))
+		vidList.write("file '{}'\n".format("vid"+str(i)+".avi"))
 	vidList.close()
 
 	arguments = [
