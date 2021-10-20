@@ -155,8 +155,8 @@ def renderSaveFrames(bins):
 Renders and saves one process' share of frames in chunks
 """
 def renderSavePartial(partialCounter, numChunks, bins, shMem):
-	fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
-	vid = cv2.VideoWriter(args.destination+"/vid"+str(partialCounter)+".avi", fourcc, args.framerate, (args.width, args.height))
+	fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+	vid = cv2.VideoWriter(args.destination+"/vid"+str(partialCounter)+".mp4", fourcc, args.framerate, (args.width, args.height))
 
 	chunksPerProcess = int(numChunks/args.processes)
 	for i in range(chunksPerProcess):
@@ -241,7 +241,7 @@ Returns ffmpeg's exit status (0 on success).
 def createVideo():
 	vidList = open(args.destination+"/vidList", "x")
 	for i in range(args.processes):
-		vidList.write("file '{}'\n".format("vid"+str(i)+".avi"))
+		vidList.write("file '{}'\n".format("vid"+str(i)+".mp4"))
 	vidList.close()
 
 	arguments = [
@@ -319,7 +319,7 @@ if __name__ == '__main__':
 			exit("ffmpeg exited with a failure.")
 		os.remove(args.destination+"/vidList")
 		for i in range(args.processes):
-			os.remove(args.destination+"/vid"+str(i)+".avi")
+			os.remove(args.destination+"/vid"+str(i)+".mp4")
 		
 		processTime = time() - startTime
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
