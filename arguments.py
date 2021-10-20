@@ -99,7 +99,7 @@ def initArgs():
 
 	# Optional arguments - Performance
 	parser.add_argument("-cs", "--chunkSize", type=int, default=-1,
-						help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 64")
+						help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 128")
 
 	parser.add_argument("-p", "--processes", type=int, default=-1,
 						help="Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)")
