@@ -6,7 +6,6 @@ Co-authors: Jannick Kremer, Jonas Bögle
 Creates a customizable image sequence for the spectrum of an audio file.
 """
 
-import os
 from arguments import args, initArgs, processArgs	# Handles arguments
 from styles import renderFrame						# Handles styles
 
@@ -15,11 +14,13 @@ from time import time
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from os import mkdir, path
+from os import mkdir, path, remove, rmdir
 from sys import exit, stdout, stderr
 from joblib import Parallel, delayed
 from multiprocessing import Manager
 import subprocess
+
+directoryExisted = False
 
 
 """
@@ -143,6 +144,9 @@ def renderSaveFrames(bins):
 	# Create destination folder
 	if(path.exists(args.destination) == False and not args.test):
 		mkdir(args.destination)
+	else:
+		global directoryExisted
+		directoryExisted = True
 
 	shMem = Manager().dict()
 	shMem['framecount'] = 0
@@ -239,10 +243,9 @@ Creates a video from an image sequence.
 Returns ffmpeg's exit status (0 on success).
 """
 def createVideo():
-	vidList = open(args.destination+"/vidList", "x")
-	for i in range(args.processes):
-		vidList.write("file '{}'\n".format("vid"+str(i)+".mp4"))
-	vidList.close()
+	with open(args.destination+"/vidList", "x") as vidList:
+		for i in range(args.processes):
+			vidList.write("file 'vid{}.mp4'\n".format(i))
 
 	arguments = [
 		'ffmpeg',
@@ -269,7 +272,7 @@ def createVideo():
 		'-crf', '16',
 		'-pix_fmt', 'yuv420p',
 		'-c', 'copy',
-		'-y', args.destination+'/finishedVideo.mp4'
+		'-y', '{}.mp4'.format(args.destination)
 	]
 
 	if(args.height % 2 == 1 or args.width % 2 == 1):
@@ -317,9 +320,16 @@ if __name__ == '__main__':
 	if(args.videoAudio or args.video):
 		if createVideo() != 0:
 			exit("ffmpeg exited with a failure.")
-		os.remove(args.destination+"/vidList")
+
+		remove(args.destination+"/vidList")
 		for i in range(args.processes):
-			os.remove(args.destination+"/vid"+str(i)+".mp4")
+			remove(args.destination+"/vid"+str(i)+".mp4")
+		if not directoryExisted:
+			try:
+				rmdir(args.destination)
+			except OSError as error:
+				print(error)
+				print("Directory '{}' can not be removed".format(args.destination))
 		
 		processTime = time() - startTime
 		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
