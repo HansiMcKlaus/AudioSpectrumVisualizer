@@ -296,3 +296,7 @@ def processArgs(args, fileData, samplerate):
 
 	if(args.processes == -1):
 		args.processes = cpu_count()
+
+	if(not args.imageSequence):
+		args.color.reverse()
+		args.backgroundColor.reverse()

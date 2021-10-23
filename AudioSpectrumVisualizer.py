@@ -197,8 +197,7 @@ def renderSaveChunk(chunkCounter, numChunks, bins, vid, shMem):
 			if args.imageSequence:
 				plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], vmin=0, vmax=255, cmap='gray')
 			else:
-				fixedFrame = np.flip(frames[i], axis=-1)			# cv2 uses BGR instead of RGB and there is no setting in the videowriter to fix that, so we have to convert the frames ourselves
-				vid.write(fixedFrame)
+				vid.write(frames[i])
 			shMem['framecount'] += 1
 			printProgressBar(shMem['framecount'], len(bins))
 
