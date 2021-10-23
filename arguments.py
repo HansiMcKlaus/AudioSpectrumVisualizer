@@ -15,23 +15,23 @@ Returns arguments.
 def initArgs():
 
 	# Instantiate the parser
-	parser = argparse.ArgumentParser(description="Creates an image sequence for the audio spectrum of an audio file.")
+	parser = argparse.ArgumentParser(description="Creates a customizable video for the spectrum of an audio file.")
 
 	# Required positional arguments
 	parser.add_argument("filename", type=str,
 						help="Name or path of the audio file")
-	parser.add_argument("destination", type=str, nargs='?', default="imageSequence",
-						help="Name or path of the created directory in which the image sequence is saved. Default: imageSequence")
+	parser.add_argument("destination", type=str, nargs='?', default="output",
+						help="Path to file to which output video is to be saved, or to directory under which the image sequence is to be saved. Default: output")
 
 	# Optional arguments - General
 	parser.add_argument("-ps", "--preset", type=str, default="default",
 						help="Name of a preset defined as a collection of flags in presets.txt. Default: default")
 
 	parser.add_argument("-ht", "--height", type=int, default=540,
-						help="Height of the image in px. Default: 540")
+						help="Height of the output video/images in px. Default: 540")
 
 	parser.add_argument("-w", "--width", type=int, default=1920,
-						help="Width of the image in px. Will be overwritten if both binWidth AND binSpacing is given! Default: 1920")
+						help="Width of the output video/images in px. Will be overwritten if both binWidth AND binSpacing is given! Default: 1920")
 
 	parser.add_argument("-b", "--bins", type=int, default=64,
 						help="Amount of bins (bars, points, etc). Default: 64")
@@ -43,7 +43,7 @@ def initArgs():
 						help="Spacing between bins in px. Default: 1/6 * width/bins")
 
 	parser.add_argument("-fr", "--framerate", type=float, default=30,
-						help="Framerate of the image sequence (Frames per second). Default: 30")
+						help="Framerate of the output video/image sequence (Frames per second). Default: 30")
 
 	parser.add_argument("-ch", "--channel", type=str, default="average",
 						help="Which channel to use (left, right, average). Default: average")
@@ -72,11 +72,8 @@ def initArgs():
 	parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 						help="Limits the range of frequencies to <frequencyEnd>Hz. Default: Ends at highest frequency")
 
-	parser.add_argument("-v", "--video", action='store_true', default=False,
-						help="Additionally creates a video (.mp4) from image sequence. Default: False")
-
-	parser.add_argument("-va", "--videoAudio", action='store_true', default=False,
-					help="Additionally creates a video (.mp4) from image sequence and audio. Default: False")
+	parser.add_argument("-i", "--imageSequence", action='store_true', default=False,
+						help="Export visualisation as frame-by-frame image sequence instead of video with audio. Default: False")
 
 	# Optional arguments - Style
 	parser.add_argument("-t", "--test", action='store_true', default=False,
@@ -102,7 +99,7 @@ def initArgs():
 						help="Amount of frames cached before clearing (Higher chunk size lowers render time, but increases RAM usage). Default: 128")
 
 	parser.add_argument("-p", "--processes", type=int, default=-1,
-						help="Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)")
+						help="Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if applicable)")
 
 
 	# Parse arguments once to get preset flag
@@ -145,8 +142,6 @@ def changePath(pathToExec, filename):
 Exits on invalid inputs and processes arguments that can not be calculated independently.
 """
 def processArgs(args, fileData, samplerate):
-	channels = len(fileData.shape)
-
 	# Exit on invalid input
 	if(args.bins <= 0):
 		exit("Must have at least one bin.")
@@ -185,11 +180,11 @@ def processArgs(args, fileData, samplerate):
 
 	if(args.duration != -1):
 		if(args.duration <= 0):
-			exit("Duratio must be longer than 0ms.")
+			exit("Duration must be longer than 0ms.")
 
 	if(args.duration != -1):
 		if(float(args.duration) > len(fileData)/samplerate):
-			exit("Duratio must not be longer than audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
+			exit("Duration must not be longer than audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
 
 	if(args.smoothY != "auto"):
 		if(int(args.smoothY) < 0):
@@ -245,8 +240,8 @@ def processArgs(args, fileData, samplerate):
 	
 	if(args.test):
 		args.framerate = 30												# Forces framerate when style testing
-		args.video = 0													# Forces no video when style testing
-		args.videoAudio = 0
+		args.processes = 1												# Makes the style-testing code easier to fit
+		args.imageSequence = True											# Forces no video when style testing
 
 	if(args.binWidth == -1 and args.binSpacing != -1):					# Only binSpacing is given
 		args.binWidth = args.width/args.bins - args.binSpacing

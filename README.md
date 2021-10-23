@@ -1,6 +1,6 @@
 # AudioSpectrumVisualizer
 
-Creates a customizable image sequence for the spectrum of an audio file.
+Creates a customizable video for the spectrum of an audio file.
 
 
 
@@ -24,7 +24,7 @@ This script requires [ffmpeg](https://ffmpeg.org/download.html).
 
 Open a command line and change into the directory where the program is located. It is easiest to simply copy the audio file into the same directory, however not at all necessary.
 
-To run the program: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder>` (If no destination folder is given, it defaults to `imageSequence` in the current directory)
+To run the program: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder>` (If no destination folder is given, it defaults to `output` in the current directory)
 
 Example: `python AudioSpectrumVisualizer.py 'Bursty Greedy Spider.mp3' Visualizer`
 
@@ -40,9 +40,9 @@ Example for when audio and destination directory are not in the same directory a
 
 `-h, --help` Shows the standard help message
 
-`-ht, --height` Height of the image in px. Default: 540
+`-ht, --height` Height of the output video/images in px. Default: 540
 
-`-w, --width` Width of the image in px. Will be overwritten if both binWidth AND binSpacing is given! Default: 1920
+`-w, --width` Width of the output video/images in px. Will be overwritten if both binWidth AND binSpacing is given! Default: 1920
 
 `-b, --bins` Amount of bins (bars, points, etc). Default: 64
 
@@ -50,7 +50,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-bs, --binSpacing` Spacing between bins in px. Default: 1/6 * width/bins
 
-`-fr, --framerate` Framerate of the image sequence (Frames per second). Default: 30
+`-fr, --framerate` Framerate of the output video/image sequence (Frames per second). Default: 30
 
 `-ch, --channel` Which channel to use (left, right, average). Default: average
 
@@ -70,9 +70,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-fe, --frequencyEnd` Limits the range of frequencies to \<frequencyEnd>Hz. Default: Ends at highest frequency
 
-`-v, --video` Additionally creates a video (.mp4) from image sequence. Default: False"
-
-`-va, --videoAudio` Additionally creates a video (.mp4) from image sequence and audio. Default: False"
+`-i, --imageSequence` Export visualisation as frame-by-frame image sequence instead of .mp4 with audio. Default: False"
 
 
 
@@ -98,7 +96,7 @@ Color names are equal to the named colors supported by HTML and CSS. Colors must
 
 `-p, --processes` Number of processes to use for rendering and export. Default: Number of processor cores (or hyperthreads, if supported)
 
-RAM usage is proportional to the chunksize multiplied by the number of processes. Per default (auto) the chunksize is set to 128 divided by the number of processes. Ex. 128/4 = chunksize of 32 per processes on a machine with 4 cores and no hyperthreading. You may want to increase the chunksize on a machine with many cores for better performance, as a larger chunksize per process increases speed.
+RAM usage is proportional to the chunksize multiplied by the number of processes. Per default (auto) the chunksize is set to 128 divided by the number of processes. Ex. 128/4 = chunksize of 32 per process on a machine with 4 cores and no hyperthreading. You may want to increase the chunksize on a machine with large RAM for better performance, as a larger chunksize per process improves render times.
 
 
 

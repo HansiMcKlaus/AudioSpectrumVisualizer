@@ -20,7 +20,8 @@ from joblib import Parallel, delayed
 from multiprocessing import Manager
 import subprocess
 
-directoryExisted = False
+VID_CODEC = "mp4v"
+VID_EXT = ".mp4"
 
 
 """
@@ -129,7 +130,9 @@ def smoothBinData(bins):
 
 
 """
-Creates directory named <DESTINATION>, renders frames from bin data and exports them into it.
+Creates directory named <args.destination>
+Renders frames from bin data and exports them directly to <args.processes> partial videos
+If args.imageSequence is set, instead exports frames as images into the directory
 Starts at "0.png" for first frame.
 """
 def renderSaveFrames(bins):
@@ -140,13 +143,6 @@ def renderSaveFrames(bins):
 		bins = np.log2(args.ylog * np.array(bins) + 1)/div	# Y-scaling
 
 	numChunks = int(np.ceil(len(bins)/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
-
-	# Create destination folder
-	if(path.exists(args.destination) == False and not args.test):
-		mkdir(args.destination)
-	else:
-		global directoryExisted
-		directoryExisted = True
 
 	shMem = Manager().dict()
 	shMem['framecount'] = 0
@@ -159,15 +155,20 @@ def renderSaveFrames(bins):
 Renders and saves one process' share of frames in chunks
 """
 def renderSavePartial(partialCounter, numChunks, bins, shMem):
-	fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-	vid = cv2.VideoWriter(args.destination+"/vid"+str(partialCounter)+".mp4", fourcc, args.framerate, (args.width, args.height))
+	if args.imageSequence:
+		vid = None
+	else:
+		fourcc = cv2.VideoWriter_fourcc(*VID_CODEC)
+		dest = args.destination+"/part"+str(partialCounter)+VID_EXT
+		vid = cv2.VideoWriter(dest, fourcc, args.framerate, (args.width, args.height))
 
 	chunksPerProcess = int(numChunks/args.processes)
 	for i in range(chunksPerProcess):
 		chunkCounter = partialCounter*chunksPerProcess + i
 		renderSaveChunk(chunkCounter, numChunks, bins, vid, shMem)
 
-	vid.release()
+	if not args.imageSequence:
+		vid.release()
 
 """
 Renders and exports one chunk worth of frames
@@ -188,18 +189,18 @@ def renderSaveChunk(chunkCounter, numChunks, bins, vid, shMem):
 		remainderChunkSize = int(remainingFrames/args.processes)
 		end = start + remainderChunkSize
 
-	if(chunkCounter == numChunks - 1):			# Sets the last chunk to do all frames that might be left over, to fix possible rounding errors etc.
-		end = len(bins)
-
-	#print("numChunks: "+ str(numChunks) +" chunkCounter: " + str(chunkCounter) + " Start: "+ str(start) +" End: "+ str(end) + "\n")
-
 	frames = renderChunkFrames(bins, start, end)
-	for frame in frames:
-		vid.write(frame)
-		shMem['framecount'] += 1
-		printProgressBar(shMem['framecount'], len(bins))
-
-	#saveChunkImages(frames, start, len(bins), shMem)
+	if args.test:
+		plt.imsave("testFrame.png", frames[0], vmin=0, vmax=255, cmap='gray')
+	else:
+		for i in range(len(frames)):
+			if args.imageSequence:
+				plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], vmin=0, vmax=255, cmap='gray')
+			else:
+				fixedFrame = np.flip(frames[i], axis=-1)			# cv2 uses BGR instead of RGB and there is no setting in the videowriter to fix that, so we have to convert the frames ourselves
+				vid.write(fixedFrame)
+			shMem['framecount'] += 1
+			printProgressBar(shMem['framecount'], len(bins))
 
 """
 Renders one chunk of frames
@@ -212,22 +213,6 @@ def renderChunkFrames(bins, start, end):
 	return frames
 
 """
-Exports one chunk of frames as a .png image sequence into it.
-"""
-def saveChunkImages(frames, start, length, shMem):
-	# Save image sequence
-	if(args.test):
-		for i in range(len(frames)):
-			plt.imsave("testFrame.png", frames[i], vmin=0, vmax=255, cmap='gray')
-			shMem['framecount'] += 1
-			printProgressBar(shMem['framecount'], length)
-	else:
-		for i in range(len(frames)):
-			plt.imsave(str(args.destination) + "/" + str(start + i) + ".png", frames[i], vmin=0, vmax=255, cmap='gray')
-			shMem['framecount'] += 1
-			printProgressBar(shMem['framecount'], length)
-
-"""
 Progress Bar (Modified from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
 """
 def printProgressBar (iteration, total, prefix = "Progress:", suffix = "Complete", decimals = 2, length = 50, fill = '█', printEnd = "\r"):
@@ -238,14 +223,14 @@ def printProgressBar (iteration, total, prefix = "Progress:", suffix = "Complete
 
 
 """
-Creates a video from an image sequence.
+Concatenates partial videos to full video and overlays audio.
 
 Returns ffmpeg's exit status (0 on success).
 """
 def createVideo():
 	with open(args.destination+"/vidList", "x") as vidList:
 		for i in range(args.processes):
-			vidList.write("file 'vid{}.mp4'\n".format(i))
+			vidList.write("file 'part"+ str(i) + VID_EXT +"'\n")
 
 	arguments = [
 		'ffmpeg',
@@ -259,12 +244,11 @@ def createVideo():
 		args.destination+"/vidList",
 	]
 
-	if(args.videoAudio):
-		if(args.start != 0):
-			arguments += ['-ss', str(args.start)]
-		arguments += ['-i', args.filename]
-		if(args.end != -1):
-			arguments += ['-t', str(args.end - args.start)]
+	if(args.start != 0):
+		arguments += ['-ss', str(args.start)]
+	arguments += ['-i', args.filename]
+	if(args.end != -1):
+		arguments += ['-t', str(args.end - args.start)]
 
 	arguments += [
 		'-c:v', 'libx264',
@@ -272,12 +256,8 @@ def createVideo():
 		'-crf', '16',
 		'-pix_fmt', 'yuv420p',
 		'-c', 'copy',
-		'-y', '{}.mp4'.format(args.destination)
+		'-y', args.destination+VID_EXT
 	]
-
-	if(args.height % 2 == 1 or args.width % 2 == 1):
-		print("Warning: Image height and or width is uneven. Applying padding.")
-	print("Converting image sequence to video.")
 
 	proc = subprocess.Popen(
 		arguments,
@@ -286,6 +266,18 @@ def createVideo():
 	)
 
 	return proc.wait()
+
+def cleanupFiles(directoryExisted):
+	remove(args.destination+"/vidList")
+	for i in range(args.processes):
+		remove(args.destination+"/part"+str(i)+VID_EXT)
+
+	if not directoryExisted:
+		try:
+			rmdir(args.destination)
+		except OSError as error:
+			print(error)
+			print("Directory '{}' can not be removed".format(args.destination))
 
 
 """
@@ -296,42 +288,50 @@ if __name__ == '__main__':
 
 	startTime = time()
 
+	maxSteps = 5
+	if args.imageSequence:
+		maxSteps = 4
+
+	# Create destination folder
+	directoryExisted = False
+	if(path.exists(args.destination) == False and not args.test):
+		mkdir(args.destination)
+	else:
+		directoryExisted = True
+
+
+	print("Loading audio. (1/{})".format(maxSteps))
 	fileData, samplerate = loadAudio()
 	processArgs(args, fileData, samplerate)
-	print("Audio succesfully loaded. (1/4)")
 
+	print("Creating frame data. (2/{})".format(maxSteps))
 	frameData = calculateFrameData(fileData, samplerate)
 	del fileData, samplerate
-	print("Frame data created. (2/4)")
 
+	print("Creating bins. (3/{})".format(maxSteps))
 	bins = createBins(frameData)
 	if(args.smoothY > 0):
 		bins = smoothBinData(bins)
 	del frameData
-	print("Bins created. (3/4)")
 
-	print("Creating and saving image sequence. (4/4)")
+	if args.imageSequence:
+		print("Creating and saving image sequence. (4/4)")
+	else:
+		print("Creating and saving partial videos. (4/5)")
 	renderSaveFrames(bins)
 	del bins
 
-	processTime = time() - startTime
-	print("Created and saved Image Sequence in " + str(format(processTime, ".3f")) + " seconds.")
-
-	if(args.videoAudio or args.video):
+	if not args.imageSequence:
+		print("Concatenating to full video and overlaying audio. (5/5)")
 		if createVideo() != 0:
 			exit("ffmpeg exited with a failure.")
 
-		remove(args.destination+"/vidList")
-		for i in range(args.processes):
-			remove(args.destination+"/vid"+str(i)+".mp4")
-		if not directoryExisted:
-			try:
-				rmdir(args.destination)
-			except OSError as error:
-				print(error)
-				print("Directory '{}' can not be removed".format(args.destination))
-		
-		processTime = time() - startTime
-		print("Succesfully converted image sequence to video in " + str(format(processTime, ".3f")) + " seconds.")
+
+	processTime = time() - startTime
+	print("Completed successfully in " + str(format(processTime, ".3f")) + " seconds.")
+
+	if not args.imageSequence:
+		print("Cleaning up files.")
+		cleanupFiles(directoryExisted)
 
 	print("Finished!")
