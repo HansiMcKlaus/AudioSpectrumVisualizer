@@ -297,6 +297,6 @@ def processArgs(args, fileData, samplerate):
 	if(args.processes == -1):
 		args.processes = cpu_count()
 
-	if(not args.imageSequence):
-		args.color.reverse()
+	if(not args.imageSequence):			# cv2 uses BGR instead of RGB and there is no setting in the videowriter to fix that
+		args.color.reverse()			# so we have to convert the colors ourselves as long as we don't export images
 		args.backgroundColor.reverse()
