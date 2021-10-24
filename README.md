@@ -71,7 +71,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-fe, --frequencyEnd` Limits the range of frequencies to \<frequencyEnd>Hz. Default: Ends at highest frequency
 
-`-i, --imageSequence` Export visualisation as frame-by-frame image sequence instead of .mp4 with audio. Default: False"
+`-is, --imageSequence` Export visualisation as frame-by-frame image sequence instead of .mp4 with audio. Default: False"
 
 
 
