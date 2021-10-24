@@ -72,7 +72,7 @@ def initArgs():
 	parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 						help="Limits the range of frequencies to <frequencyEnd>Hz. Default: Ends at highest frequency")
 
-	parser.add_argument("-i", "--imageSequence", action='store_true', default=False,
+	parser.add_argument("-is", "--imageSequence", action='store_true', default=False,
 						help="Export visualisation as frame-by-frame image sequence instead of video with audio. Default: False")
 
 	# Optional arguments - Style

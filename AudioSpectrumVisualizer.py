@@ -314,14 +314,14 @@ if __name__ == '__main__':
 	del frameData
 
 	if args.imageSequence:
-		print("Creating and saving image sequence. (4/4)")
+		print("Creating and saving image sequence. (4/{})".format(maxSteps))
 	else:
-		print("Creating and saving partial videos. (4/5)")
+		print("Creating and saving partial videos. (4/{})".format(maxSteps))
 	renderSaveFrames(bins)
 	del bins
 
 	if not args.imageSequence:
-		print("Concatenating to full video and overlaying audio. (5/5)")
+		print("Concatenating to full video and overlaying audio. (5/{})".format(maxSteps))
 		if createVideo() != 0:
 			exit("ffmpeg exited with a failure.")
 
