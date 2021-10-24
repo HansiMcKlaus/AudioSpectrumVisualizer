@@ -4,3 +4,4 @@ git+https://github.com/irgendwr/audio2numpy
 matplotlib
 joblib
 scikit-image
+opencv-python
