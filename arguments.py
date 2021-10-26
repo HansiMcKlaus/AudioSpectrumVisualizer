@@ -300,11 +300,11 @@ def processArgs(args, fileData, samplerate):
 	else:
 		args.frequencyEnd = float(args.frequencyEnd)
 
-	if(args.chunkSize == -1):
-		args.chunkSize = int(DEFAULT_CHUNKSIZE/cpu_count())
-
 	if(args.processes == -1):
 		args.processes = cpu_count()
+
+	if(args.chunkSize == -1):
+		args.chunkSize = int(DEFAULT_CHUNKSIZE/args.processes)
 
 	if(not args.imageSequence):			# cv2 uses BGR instead of RGB and there is no setting in the videowriter to fix that
 		args.color.reverse()			# so we have to convert the colors ourselves as long as we don't export images
