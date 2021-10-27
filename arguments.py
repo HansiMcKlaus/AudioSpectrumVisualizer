@@ -263,8 +263,7 @@ def processArgs(args, fileData, samplerate):
 		args.binWidth = args.width/args.bins * (5/6)
 		args.binSpacing = args.width/args.bins * (1/6)
 	else:																# Both are given (Overwrites width)
-		args.binWidth = args.binWidth
-		args.binSpacing = args.binSpacing
+		args.width = int((args.binWidth + args.binSpacing) * args.bins)
 
 	if(args.barHeight > args.height):
 		exit("Bar height must not exceed image height of " + str(args.height) + "px.")
