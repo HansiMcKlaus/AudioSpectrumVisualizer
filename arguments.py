@@ -187,7 +187,7 @@ def processArgs(args, fileData, samplerate):
 		if(args.binSpacing < 0):
 			exit("Bin spacing must be 0px or higher")
 
-	if(args.duration != -1):
+	if(args.duration != -1 and not args.test):
 		if(args.duration <= 0):
 			exit("Duration must be longer than 0ms.")
 
@@ -249,6 +249,7 @@ def processArgs(args, fileData, samplerate):
 	
 	if(args.test):
 		args.framerate = 30												# Forces framerate when style testing
+		args.duration = -1
 		args.processes = 1												# Makes the style-testing code easier to fit
 		args.imageSequence = True											# Forces no video when style testing
 
