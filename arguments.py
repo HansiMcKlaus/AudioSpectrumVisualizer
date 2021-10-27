@@ -191,7 +191,7 @@ def processArgs(args, fileData, samplerate):
 		if(args.duration <= 0):
 			exit("Duration must be longer than 0ms.")
 
-	if(args.duration != -1):
+	if(args.duration != -1) and not args.test:
 		if(float(args.duration) > len(fileData)/samplerate):
 			exit("Duration must not be longer than audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
 
