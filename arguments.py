@@ -272,6 +272,9 @@ def processArgs(args, fileData, samplerate):
 
 	args.backgroundColor = hex2rgb(args.backgroundColor)				# Color of the background
 
+	if args.color == args.backgroundColor:
+		print("Bro, what?")
+
 	if args.duration == -1:
 		args.duration = 1000/args.framerate			# Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1
 
