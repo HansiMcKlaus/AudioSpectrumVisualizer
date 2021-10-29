@@ -1,4 +1,5 @@
 from sys import exit
+from copy import copy
 
 """
 Dictionary that maps colors names to their [R, G, B] values.
@@ -174,7 +175,7 @@ Converts HEX string or color name into RGB.
 """
 def hex2rgb(hex):
 	if hex.lower() in colors:
-		return colors[hex.lower()]
+		return copy(colors[hex.lower()])
 	else:
 		hexLen = len(hex)
 		color = []
