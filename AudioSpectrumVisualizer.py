@@ -229,7 +229,7 @@ Returns ffmpeg's exit status (0 on success).
 def createVideo():
 	with open(args.destination+"/vidList", "x") as vidList:
 		for i in range(args.processes):
-			vidList.write("file 'part"+ str(i) + VID_EXT +"'\n")
+			vidList.write(f"file 'part{str(i)}{VID_EXT}'\n")
 
 	arguments = [
 		'ffmpeg',
@@ -276,7 +276,7 @@ def cleanupFiles(directoryExisted):
 			rmdir(args.destination)
 		except OSError as error:
 			print(error)
-			print("Directory '{}' can not be removed".format(args.destination))
+			print(f"Directory '{args.destination}' can not be removed")
 
 
 """
@@ -299,29 +299,29 @@ if __name__ == '__main__':
 		directoryExisted = True
 
 
-	print("Loading audio. (1/{})".format(maxSteps))
+	print(f"Loading audio. (1/{maxSteps})")
 	fileData, samplerate = loadAudio()
 	processArgs(args, fileData, samplerate)
 
-	print("Creating frame data. (2/{})".format(maxSteps))
+	print(f"Creating frame data. (2/{maxSteps})")
 	frameData = calculateFrameData(fileData, samplerate)
 	del fileData, samplerate
 
-	print("Creating bins. (3/{})".format(maxSteps))
+	print(f"Creating bins. (3/{maxSteps})")
 	bins = createBins(frameData)
 	if args.smoothY > 0:
 		bins = smoothBinData(bins)
 	del frameData
 
 	if args.imageSequence:
-		print("Creating and saving image sequence. (4/{})".format(maxSteps))
+		print(f"Creating and saving image sequence. (4/{maxSteps})")
 	else:
-		print("Creating and saving partial videos. (4/{})".format(maxSteps))
+		print(f"Creating and saving partial videos. (4/{maxSteps})")
 	renderSaveFrames(bins)
 	del bins
 
 	if not args.imageSequence:
-		print("Concatenating to full video and overlaying audio. (5/{})".format(maxSteps))
+		print(f"Concatenating to full video and overlaying audio. (5/{maxSteps})")
 		if createVideo() != 0:
 			exit("ffmpeg exited with a failure.")
 
