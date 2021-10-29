@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/bin/env python
 """
 @author: Maik Simke
 Co-authors: Jannick Kremer, Jonas Bögle
