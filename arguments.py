@@ -146,166 +146,166 @@ Exits on invalid inputs and processes arguments that can not be calculated indep
 """
 def processArgs(args, fileData, samplerate):
 	# Exit on invalid input
-	if(args.bins <= 0):
+	if args.bins <= 0:
 		exit("Must have at least one bin.")
 
-	if(args.height <= 0):
+	if args.height <= 0:
 		exit("Height must be at least 1px.")
 
-	if(args.width <= 0):
+	if args.width <= 0:
 		exit("Width must be at least 1px.")
 
-	if(args.framerate <= 0):
+	if args.framerate <= 0:
 		exit("Framerate must be at least 1.")
 
-	if(args.channel not in ["left", "right", "average"]):
+	if args.channel not in ["left", "right", "average"]:
 		exit("Invalid channel. Valid channels: left, right, average.")
 
-	if(args.style not in ["bars", "circles", "donuts", "line", "fill"]):
+	if args.style not in ["bars", "circles", "donuts", "line", "fill"]:
 		exit("Style not recognized. Available styles: bars, circles, donuts, line, fill.")
 
-	if(args.barHeight < 1 and args.barHeight != -1):
+	if args.barHeight < 1 and args.barHeight != -1:
 		exit("Bar height must be at least 1px.")
 
-	if(args.lineThickness < 1):
+	if args.lineThickness < 1:
 		exit("Line thicknes must be at least 1px.")
 
-	if(args.mirror < 0 or args.mirror > 2):
+	if args.mirror < 0 or args.mirror > 2:
 		exit("Mirror argument only accepts 0 (off), 1 (middle), 2 (top/bottom).")
 
-	if(args.xlog < 0):
+	if args.xlog < 0:
 		exit("Scalar for xlog must not be smaller than 0.")
 
-	if(args.ylog < 0):
+	if args.ylog < 0:
 		exit("Scalar for ylog must not be smaller than 0.")
 
-	if(args.binWidth != -1):
-		if(args.binWidth < 1):
+	if args.binWidth != -1:
+		if args.binWidth < 1:
 			exit("Bin width must be at least 1px.")
 
-	if(args.binSpacing != -1):
-		if(args.binSpacing < 0):
+	if args.binSpacing != -1:
+		if args.binSpacing < 0:
 			exit("Bin spacing must be 0px or higher")
 
-	if(args.duration != -1 and not args.test):
-		if(args.duration <= 0):
+	if args.duration != -1 and not args.test:
+		if args.duration <= 0:
 			exit("Duration must be longer than 0ms.")
 
-	if(args.duration != -1) and not args.test:
-		if(float(args.duration) > len(fileData)/samplerate):
+	if args.duration != -1 and not args.test:
+		if args.duration > len(fileData)/samplerate:
 			exit("Duration must not be longer than audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
 
-	if(args.smoothY != "auto"):
-		if(int(args.smoothY) < 0):
+	if args.smoothY != "auto" :
+		if int(args.smoothY) < 0:
 			exit("Smoothing scalar for smoothing in frame must be 0 or higher.")
 
-	if(args.start != 0):
-		if(float(args.start) < 0):
+	if args.start != 0:
+		if args.start < 0:
 			exit("Start time must be 0 or later.")
 
-	if(args.end != -1):
-		if(float(args.end) <= 0):
+	if args.end != -1:
+		if args.end <= 0:
 			exit("End time must be later than 0.")
 
-	if(args.start != 0):
-		if(float(args.start) >= len(fileData)/samplerate):
+	if args.start != 0:
+		if args.start >= len(fileData)/samplerate:
 			exit("Start time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
 
-	if(args.end != -1 and not args.test):
-		if(float(args.end) > len(fileData)/samplerate):
+	if args.end != -1 and not args.test:
+		if args.end > len(fileData)/samplerate:
 			exit("End time exceeds audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
 
-	if(args.start != 0 and args.end != -1):
-		if(float(args.start) >= float(args.end)):
+	if args.start != 0 and args.end != -1:
+		if args.start >= args.end:
 			exit("Start time must predate end time.")
 
-	if(args.frequencyStart != 0):
-		if(float(args.frequencyStart) < 0):
+	if args.frequencyStart != 0:
+		if args.frequencyStart < 0:
 			exit("Frequency start must be 0 or higher.")
 
-	if(args.frequencyEnd != -1):
-		if(float(args.frequencyEnd) <= 0):
+	if args.frequencyEnd != -1:
+		if args.frequencyEnd <= 0:
 			exit("Frequency end must be higher than 0.")
 
-	if(args.frequencyStart != 0):
-		if(float(args.frequencyStart) >= samplerate/2):
+	if args.frequencyStart != 0:
+		if args.frequencyStart >= samplerate/2:
 			exit("Frequency start exceeds max frequency of " + str(int(samplerate/2)) + "Hz.")
 
-	if(args.frequencyEnd != -1):
-		if(float(args.frequencyEnd) > samplerate/2):
+	if args.frequencyEnd != -1:
+		if args.frequencyEnd > samplerate/2:
 			exit("Frequency end exceeds max frequency of " + str(int(samplerate/2)) + "Hz.")
 
-	if(args.frequencyStart != 0 and args.frequencyEnd != -1):
-		if(float(args.frequencyStart) >= float(args.frequencyEnd)):
+	if args.frequencyStart != 0 and args.frequencyEnd != -1:
+		if args.frequencyStart >= args.frequencyEnd:
 			exit("Frequency start must be lower than frequency end.")
 
-	if(args.chunkSize == 0 or args.chunkSize < -1):
+	if args.chunkSize == 0 or args.chunkSize < -1:
 		exit("Chunk size must be at least 1.")
 
-	if(args.processes == 0 or args.processes < -1):
+	if args.processes == 0 or args.processes < -1:
 		exit("Number of processes must be at least 1")
 
 	# Process optional arguments:
 	
-	if(args.test):
+	if args.test:
 		args.framerate = 30												# Forces framerate when style testing
 		args.duration = -1
 		args.processes = 1												# Makes the style-testing code easier to fit
 		args.imageSequence = True											# Forces no video when style testing
 
-	if(args.binWidth == -1 and args.binSpacing != -1):					# Only binSpacing is given
+	if args.binWidth == -1 and args.binSpacing != -1:					# Only binSpacing is given
 		args.binWidth = args.width/args.bins - args.binSpacing
 		args.binSpacing = args.binSpacing
-	elif(args.binWidth != -1 and args.binSpacing == -1):				# Only binWidth is given
+	elif args.binWidth != -1 and args.binSpacing == -1:				# Only binWidth is given
 		args.binWidth = args.binWidth
 		args.binSpacing = args.width/args.bins - args.binWidth
-	elif(args.binWidth == -1 and args.binSpacing == -1):				# Neither is given
+	elif args.binWidth == -1 and args.binSpacing == -1:				# Neither is given
 		args.binWidth = args.width/args.bins * (5/6)
 		args.binSpacing = args.width/args.bins * (1/6)
 	else:																# Both are given (Overwrites width)
 		args.width = int((args.binWidth + args.binSpacing) * args.bins)
 
-	if(args.barHeight > args.height):
+	if args.barHeight > args.height:
 		exit("Bar height must not exceed image height of " + str(args.height) + "px.")
 
 	args.color = hex2rgb(args.color)									# Color of bins
 
 	args.backgroundColor = hex2rgb(args.backgroundColor)				# Color of the background
 
-	if(args.duration == -1):
+	if args.duration == -1:
 		args.duration = 1000/args.framerate			# Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1
 
-	if(args.smoothY == "auto"):						# Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
+	if args.smoothY == "auto":						# Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
 		args.smoothY = int(args.bins/32)
 	else:
 		args.smoothY = int(args.smoothY)
 
-	if(args.start == 0 or args.test == 1):			# Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1
+	if args.start == 0 or args.test == 1:			# Begins render at <start> seconds. If start=-1: Renders from the start of the sound file. Default: -1
 		args.start = 0
 	else:
-		args.start = float(args.start)
+		args.start = args.start
 
-	if(args.end == -1 or args.test == 1):			# Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1
+	if args.end == -1 or args.test == 1:			# Ends render at <end> seconds. If end=-1: Renders to the end of the sound file. Default: -1
 		args.end = len(fileData)/samplerate
 	else:
-		args.end = float(args.end)
+		args.end = args.end
 
-	if(args.frequencyStart == 0):					# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=-1: Starts at 0Hz. Default: -1
+	if args.frequencyStart == 0:					# Limits the range of frequencies to <frequencyStart>Hz and onward. If frequencyStart=-1: Starts at 0Hz. Default: -1
 		args.frequencyStart = 0
 	else:
-		args.frequencyStart = float(args.frequencyStart)
+		args.frequencyStart = args.frequencyStart
 
-	if(args.frequencyEnd == -1):					# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1
+	if args.frequencyEnd == -1:					# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1
 		args.frequencyEnd = samplerate/2
 	else:
-		args.frequencyEnd = float(args.frequencyEnd)
+		args.frequencyEnd = args.frequencyEnd
 
-	if(args.processes == -1):
+	if args.processes == -1:
 		args.processes = cpu_count()
 
-	if(args.chunkSize == -1):
+	if args.chunkSize == -1:
 		args.chunkSize = int(DEFAULT_CHUNKSIZE/args.processes)
 
-	if(not args.imageSequence):			# cv2 uses BGR instead of RGB and there is no setting in the videowriter to fix that
+	if not args.imageSequence:			# cv2 uses BGR instead of RGB and there is no setting in the videowriter to fix that
 		args.color.reverse()			# so we have to convert the colors ourselves as long as we don't export images
 		args.backgroundColor.reverse()
