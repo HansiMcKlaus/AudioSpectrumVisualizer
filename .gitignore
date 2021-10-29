@@ -7,6 +7,12 @@
 *.wav
 *.mp4
 *.m4a
+*.ogg
+*.opus
+*.flac
+*.raw
+*.aac
+*.webm
 __pycache__
 *.pyc
 
