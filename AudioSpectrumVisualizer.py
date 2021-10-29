@@ -28,12 +28,12 @@ VID_EXT = ".mp4"
 Loads audio file.
 """
 def loadAudio():
-	if(args.test):
+	if args.test:
 		fileData = np.load("testData.npy")
 		samplerate = 44100
 		return fileData, samplerate
 	else:
-		if(path.isfile(args.filename) == False):
+		if not path.isfile(args.filename):
 			exit("Path to file does not exist.")
 		else:
 			fileData, samplerate = open_audio(args.filename)
@@ -47,12 +47,12 @@ def calculateFrameData(fileData, samplerate):
 	# Chooses what channels to be calculated
 	channels = []
 
-	if(len(fileData.shape) > 1):						# Converts multiple channels to single channel
-		if(args.channel == "average"):
+	if len(fileData.shape) > 1:						# Converts multiple channels to single channel
+		if args.channel == "average":
 			channels.append(np.mean(fileData, axis=1))
-		elif(args.channel == "left"):
+		elif args.channel == "left":
 			channels.append(fileData[:,0])
-		elif(args.channel == "right"):
+		elif args.channel == "right":
 			channels.append(fileData[:,1])
 		else:											# Adds all channels (Stereo, Surround)
 			for i in range(fileData.shape[1]):
@@ -74,12 +74,12 @@ def calculateFrameData(fileData, samplerate):
 			frameDataStart = int(frameDataMidpoint - (args.duration/1000/2)*samplerate)
 			frameDataEnd = int(frameDataMidpoint + (args.duration/1000/2)*samplerate)
 
-			if(frameDataStart < 0):						# Leftbound data
+			if frameDataStart < 0:						# Leftbound data
 				emptyFrame = np.zeros(int(args.duration/1000 * samplerate))
 				currentFrameData = channelData[0:frameDataEnd]
 				emptyFrame[0:len(currentFrameData)] = currentFrameData
 				currentFrameData = emptyFrame
-			elif(frameDataEnd > len(channelData)):		# Rightbound data
+			elif frameDataEnd > len(channelData):		# Rightbound data
 				emptyFrame = np.zeros(int(args.duration/1000 * samplerate))
 				currentFrameData = channelData[frameDataStart:]
 				emptyFrame[0:len(currentFrameData)] = currentFrameData
@@ -111,13 +111,13 @@ def createBins(frameData):
 		for data in channel:
 			frameBins = []
 			for i in range(args.bins):
-				if(args.xlog == 0):
+				if args.xlog == 0:
 					dataStart = int(i*len(data)/args.bins)
 					dataEnd = int((i+1)*len(data)/args.bins)
 				else:
 					dataStart = int((i/args.bins)**args.xlog * len(data))
 					dataEnd = int(((i+1)/args.bins)**args.xlog * len(data))
-				if(dataEnd == dataStart):
+				if dataEnd == dataStart:
 					dataEnd += 1						# Ensures [dataStart:dataEnd] does not result NaN
 				frameBins.append(np.mean(data[dataStart:dataEnd]))
 			channelBins.append(frameBins)
@@ -137,9 +137,9 @@ def smoothBinData(bins):
 		for frameBinData in channel:
 			smoothedBinData = []
 			for i in range(len(frameBinData)):
-				if(i < args.smoothY):						# First n bins
+				if i < args.smoothY:						# First n bins
 					smoothedBinData.append(np.mean(frameBinData[:i+args.smoothY+1]))
-				elif(i >= len(frameBinData)-args.smoothY):	# Last n bins
+				elif i >= len(frameBinData)-args.smoothY:	# Last n bins
 					smoothedBinData.append(np.mean(frameBinData[i-args.smoothY:]))
 				else:										# Normal Case
 					smoothedBinData.append(np.mean(frameBinData[i-args.smoothY:i+args.smoothY+1]))
@@ -159,7 +159,7 @@ Starts at "0.png" for first frame.
 def renderSaveFrames(bins):
 	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
 
-	if(args.ylog != 0):
+	if args.ylog != 0:
 		div = np.log2(args.ylog + 1)						# Constant for y-scaling
 		bins = np.log2(args.ylog * np.array(bins) + 1)/div	# Y-scaling
 
@@ -202,7 +202,7 @@ def renderSaveChunk(chunkCounter, numChunks, bins, vid, shMem):
 	start = finishedChunkSets * framesPerProcess + currentChunkNumInNewSet * args.chunkSize
 	end = start + args.chunkSize
 
-	if(chunkCounter % chunksPerProcess == chunksPerProcess - 1):
+	if chunkCounter % chunksPerProcess == chunksPerProcess - 1:
 		completeChunkSets = int(numChunks/args.processes) - 1
 		fullSetChunks = completeChunkSets * args.processes
 		fullSetFrames = fullSetChunks * args.chunkSize
@@ -264,10 +264,10 @@ def createVideo():
 		args.destination+"/vidList",
 	]
 
-	if(args.start != 0):
+	if args.start != 0:
 		arguments += ['-ss', str(args.start)]
 	arguments += ['-i', args.filename]
-	if(args.end != -1):
+	if args.end != -1:
 		arguments += ['-t', str(args.end - args.start)]
 
 	arguments += [
@@ -314,7 +314,7 @@ if __name__ == '__main__':
 
 	# Create destination folder
 	directoryExisted = False
-	if(path.exists(args.destination) == False and not args.test):
+	if not path.exists(args.destination) and not args.test:
 		mkdir(args.destination)
 	else:
 		directoryExisted = True
@@ -330,7 +330,7 @@ if __name__ == '__main__':
 
 	print("Creating bins. (3/{})".format(maxSteps))
 	bins = createBins(frameData)
-	if(args.smoothY > 0):
+	if args.smoothY > 0:
 		bins = smoothBinData(bins)
 	del frameData
 
