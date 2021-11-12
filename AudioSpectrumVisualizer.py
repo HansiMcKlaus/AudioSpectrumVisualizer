@@ -1,4 +1,4 @@
-#!/bin/env python
+# -*- coding: utf-8 -*-
 """
 @author: Maik Simke
 Co-authors: Jannick Kremer, Jonas Bögle
@@ -28,12 +28,12 @@ VID_EXT = ".mp4"
 Loads audio file.
 """
 def loadAudio():
-	if args.test:
+	if(args.test):
 		fileData = np.load("testData.npy")
 		samplerate = 44100
 		return fileData, samplerate
 	else:
-		if not path.isfile(args.filename):
+		if(path.isfile(args.filename) == False):
 			exit("Path to file does not exist.")
 		else:
 			fileData, samplerate = open_audio(args.filename)
@@ -41,72 +41,89 @@ def loadAudio():
 
 
 """
-Processes data from <FILENAME> and assigns data to its respective frame.
+Processes data from <FILENAME> and assigns data to its respective channels frame.
 """
 def calculateFrameData(fileData, samplerate):
-	# Averages multiple channels into a mono channel
-	if len(fileData.shape) > 1:
-		if args.channel == "average":
-			fileData = np.mean(fileData, axis=1)
-		elif args.channel == "left":
-			fileData = fileData[:,0]
-		elif args.channel == "right":
-			fileData = fileData[:,1]
+	# Chooses what channels to be calculated
+	channels = []
 
-	# Slices fileData to start and end point
-	fileData = fileData[int(args.start*samplerate):int(args.end*samplerate)]
+	if(len(fileData.shape) > 1):						# Converts multiple channels to single channel
+		if(args.channel == "average"):
+			channels.append(np.mean(fileData, axis=1))
+		elif(args.channel == "left"):
+			channels.append(fileData[:,0])
+		elif(args.channel == "right"):
+			channels.append(fileData[:,1])
+		else:											# Adds all channels (Stereo, Surround)
+			for i in range(fileData.shape[1]):
+				channels.append(fileData[:,i])
+	else:												# Adds mono channel
+		channels.append(fileData)
 
-	# Splits data into frames
 	frameData = []
-	stepSize = samplerate/args.framerate
-	for i in range(int(np.ceil(len(fileData)/stepSize))):
-		frameDataMidpoint = stepSize * i + (stepSize/2)
-		frameDataStart = int(frameDataMidpoint - (args.duration/1000/2)*samplerate)
-		frameDataEnd = int(frameDataMidpoint + (args.duration/1000/2)*samplerate)
+	for channel in channels:
 
-		if frameDataStart < 0:					# Leftbound data
-			emptyFrame = np.zeros(int(args.duration/1000 * samplerate))
-			currentFrameData = fileData[0:frameDataEnd]
-			emptyFrame[0:len(currentFrameData)] = currentFrameData
-			currentFrameData = emptyFrame
-		elif frameDataEnd > len(fileData):		# Rightbound data
-			emptyFrame = np.zeros(int(args.duration/1000 * samplerate))
-			currentFrameData = fileData[frameDataStart:]
-			emptyFrame[0:len(currentFrameData)] = currentFrameData
-			currentFrameData = emptyFrame
-		else:									# Inbound data
-			currentFrameData = fileData[int(frameDataStart):int(frameDataEnd)]
+		# Slices channelData to start and end point
+		channelData = channel[int(args.start*samplerate):int(args.end*samplerate)]
 
-	# Fourier Transformation (Amplitudes)
-		frameDataAmplitudes = abs(np.fft.rfft(currentFrameData))
+		# Splits data into frames
+		channelFrameData = []
+		stepSize = samplerate/args.framerate
+		for i in range(int(np.ceil(len(channelData)/stepSize))):
+			frameDataMidpoint = stepSize * i + (stepSize/2)
+			frameDataStart = int(frameDataMidpoint - (args.duration/1000/2)*samplerate)
+			frameDataEnd = int(frameDataMidpoint + (args.duration/1000/2)*samplerate)
 
-	# Slices frameDataAmplitudes to only contain the amplitudes between startFrequency and endFrequency
-		frameDataAmplitudes = frameDataAmplitudes[int(args.frequencyStart/(samplerate/2)*len(frameDataAmplitudes)):int(args.frequencyEnd/(samplerate/2)*len(frameDataAmplitudes))]
+			if(frameDataStart < 0):						# Leftbound data
+				emptyFrame = np.zeros(int(args.duration/1000 * samplerate))
+				currentFrameData = channelData[0:frameDataEnd]
+				emptyFrame[0:len(currentFrameData)] = currentFrameData
+				currentFrameData = emptyFrame
+			elif(frameDataEnd > len(channelData)):		# Rightbound data
+				emptyFrame = np.zeros(int(args.duration/1000 * samplerate))
+				currentFrameData = channelData[frameDataStart:]
+				emptyFrame[0:len(currentFrameData)] = currentFrameData
+				currentFrameData = emptyFrame
+			else:										# Inbound data
+				currentFrameData = channelData[int(frameDataStart):int(frameDataEnd)]
 
-		frameData.append(frameDataAmplitudes)
+			# Fourier Transformation (Amplitudes)
+			frameDataAmplitudes = abs(np.fft.rfft(currentFrameData))
+
+			# Slices frameDataAmplitudes to only contain the amplitudes between startFrequency and endFrequency
+			frameDataAmplitudes = frameDataAmplitudes[int(args.frequencyStart/(samplerate/2)*len(frameDataAmplitudes)):int(args.frequencyEnd/(samplerate/2)*len(frameDataAmplitudes))]
+
+			channelFrameData.append(frameDataAmplitudes)
+
+		#frameData.append(channelFrameData)
+		frameData.append(channelFrameData)
 
 	return frameData
 
 
 """
-Creates the bins for every frame. A bin contains an amplitude that will later be represented as the height of a bar, point, line, etc. on the frame.
+Creates the bins for every channels frame. A bin contains an amplitude that will later be represented as the height of a bar, point, line, etc. on the frame.
 """
 def createBins(frameData):
 	bins = []
-	for data in frameData:
-		frameBins = []
-		for i in range(args.bins):
-			if args.xlog == 0:
-				dataStart = int(i*len(data)/args.bins)
-				dataEnd = int((i+1)*len(data)/args.bins)
-			else:
-				dataStart = int((i/args.bins)**args.xlog * len(data))
-				dataEnd = int(((i+1)/args.bins)**args.xlog * len(data))
-			if dataEnd == dataStart:
-				dataEnd += 1							# Ensures [dataStart:dataEnd] does not result NaN
-			frameBins.append(np.mean(data[dataStart:dataEnd]))
-		bins.append(frameBins)
+	for channel in frameData:
+		channelBins = []
+		for data in channel:
+			frameBins = []
+			for i in range(args.bins):
+				if(args.xlog == 0):
+					dataStart = int(i*len(data)/args.bins)
+					dataEnd = int((i+1)*len(data)/args.bins)
+				else:
+					dataStart = int((i/args.bins)**args.xlog * len(data))
+					dataEnd = int(((i+1)/args.bins)**args.xlog * len(data))
+				if(dataEnd == dataStart):
+					dataEnd += 1						# Ensures [dataStart:dataEnd] does not result NaN
+				frameBins.append(np.mean(data[dataStart:dataEnd]))
+			channelBins.append(frameBins)
 
+		bins.append(channelBins)
+	
 	return bins
 
 
@@ -115,16 +132,20 @@ Smoothes the bins in a frame (Over the past/next n frames).
 """
 def smoothBinData(bins):
 	binsSmoothed = []
-	for frameBinData in bins:
-		smoothedBinData = []
-		for i in range(len(frameBinData)):
-			if i < args.smoothY:						# First n bins
-				smoothedBinData.append(np.mean(frameBinData[:i+args.smoothY+1]))
-			elif i >= len(frameBinData)-args.smoothY:	# Last n bins
-				smoothedBinData.append(np.mean(frameBinData[i-args.smoothY:]))
-			else:										# Normal Case
-				smoothedBinData.append(np.mean(frameBinData[i-args.smoothY:i+args.smoothY+1]))
-		binsSmoothed.append(smoothedBinData)
+	for channel in bins:
+		channelBinsSmoothed = []
+		for frameBinData in channel:
+			smoothedBinData = []
+			for i in range(len(frameBinData)):
+				if(i < args.smoothY):						# First n bins
+					smoothedBinData.append(np.mean(frameBinData[:i+args.smoothY+1]))
+				elif(i >= len(frameBinData)-args.smoothY):	# Last n bins
+					smoothedBinData.append(np.mean(frameBinData[i-args.smoothY:]))
+				else:										# Normal Case
+					smoothedBinData.append(np.mean(frameBinData[i-args.smoothY:i+args.smoothY+1]))
+			channelBinsSmoothed.append(smoothedBinData)
+
+		binsSmoothed.append(channelBinsSmoothed)
 
 	return binsSmoothed
 
@@ -138,17 +159,17 @@ Starts at "0.png" for first frame.
 def renderSaveFrames(bins):
 	bins = bins/np.max(bins)							# Normalize vector length to [0,1]
 
-	if args.ylog != 0:
+	if(args.ylog != 0):
 		div = np.log2(args.ylog + 1)						# Constant for y-scaling
 		bins = np.log2(args.ylog * np.array(bins) + 1)/div	# Y-scaling
 
-	numChunks = int(np.ceil(len(bins)/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
+	numChunks = int(np.ceil(bins.shape[1]/(args.processes * args.chunkSize))) * args.processes		# Total number of chunks (expanded to be a multiple of args.processes)
 
 	shMem = Manager().dict()
 	shMem['framecount'] = 0
 	Parallel(n_jobs=args.processes)(delayed(renderSavePartial)(j, numChunks, bins, shMem) for j in range(args.processes))
 
-	printProgressBar(len(bins), len(bins))
+	printProgressBar(bins.shape[1], bins.shape[1])
 	print()												# New line after progress bar
 
 """
@@ -176,16 +197,16 @@ Renders and exports one chunk worth of frames
 def renderSaveChunk(chunkCounter, numChunks, bins, vid, shMem):
 	chunksPerProcess = int(numChunks/args.processes)
 	finishedChunkSets = int(chunkCounter/chunksPerProcess)
-	framesPerProcess = int(len(bins)/args.processes)
+	framesPerProcess = int(bins.shape[1]/args.processes)
 	currentChunkNumInNewSet = chunkCounter - finishedChunkSets * chunksPerProcess
 	start = finishedChunkSets * framesPerProcess + currentChunkNumInNewSet * args.chunkSize
 	end = start + args.chunkSize
 
-	if chunkCounter % chunksPerProcess == chunksPerProcess - 1:
+	if(chunkCounter % chunksPerProcess == chunksPerProcess - 1):
 		completeChunkSets = int(numChunks/args.processes) - 1
 		fullSetChunks = completeChunkSets * args.processes
 		fullSetFrames = fullSetChunks * args.chunkSize
-		remainingFrames = len(bins) - fullSetFrames
+		remainingFrames = bins.shape[1] - fullSetFrames
 		remainderChunkSize = int(remainingFrames/args.processes)
 		end = start + remainderChunkSize
 
@@ -199,7 +220,7 @@ def renderSaveChunk(chunkCounter, numChunks, bins, vid, shMem):
 			else:
 				vid.write(frames[i])
 			shMem['framecount'] += 1
-			printProgressBar(shMem['framecount'], len(bins))
+			printProgressBar(shMem['framecount'], bins.shape[1])
 
 """
 Renders one chunk of frames
@@ -229,7 +250,7 @@ Returns ffmpeg's exit status (0 on success).
 def createVideo():
 	with open(args.destination+"/vidList", "x") as vidList:
 		for i in range(args.processes):
-			vidList.write(f"file 'part{str(i)}{VID_EXT}'\n")
+			vidList.write("file 'part"+ str(i) + VID_EXT +"'\n")
 
 	arguments = [
 		'ffmpeg',
@@ -243,10 +264,10 @@ def createVideo():
 		args.destination+"/vidList",
 	]
 
-	if args.start != 0:
+	if(args.start != 0):
 		arguments += ['-ss', str(args.start)]
 	arguments += ['-i', args.filename]
-	if args.end != -1:
+	if(args.end != -1):
 		arguments += ['-t', str(args.end - args.start)]
 
 	arguments += [
@@ -276,7 +297,7 @@ def cleanupFiles(directoryExisted):
 			rmdir(args.destination)
 		except OSError as error:
 			print(error)
-			print(f"Directory '{args.destination}' can not be removed")
+			print("Directory '{}' can not be removed".format(args.destination))
 
 
 """
@@ -293,35 +314,35 @@ if __name__ == '__main__':
 
 	# Create destination folder
 	directoryExisted = False
-	if not path.exists(args.destination) and not args.test:
+	if(path.exists(args.destination) == False and not args.test):
 		mkdir(args.destination)
 	else:
 		directoryExisted = True
 
 
-	print(f"Loading audio. (1/{maxSteps})")
+	print("Loading audio. (1/{})".format(maxSteps))
 	fileData, samplerate = loadAudio()
 	processArgs(args, fileData, samplerate)
 
-	print(f"Creating frame data. (2/{maxSteps})")
+	print("Creating frame data. (2/{})".format(maxSteps))
 	frameData = calculateFrameData(fileData, samplerate)
 	del fileData, samplerate
 
-	print(f"Creating bins. (3/{maxSteps})")
+	print("Creating bins. (3/{})".format(maxSteps))
 	bins = createBins(frameData)
-	if args.smoothY > 0:
+	if(args.smoothY > 0):
 		bins = smoothBinData(bins)
 	del frameData
 
 	if args.imageSequence:
-		print(f"Creating and saving image sequence. (4/{maxSteps})")
+		print("Creating and saving image sequence. (4/{})".format(maxSteps))
 	else:
-		print(f"Creating and saving partial videos. (4/{maxSteps})")
+		print("Creating and saving partial videos. (4/{})".format(maxSteps))
 	renderSaveFrames(bins)
 	del bins
 
 	if not args.imageSequence:
-		print(f"Concatenating to full video and overlaying audio. (5/{maxSteps})")
+		print("Concatenating to full video and overlaying audio. (5/{})".format(maxSteps))
 		if createVideo() != 0:
 			exit("ffmpeg exited with a failure.")
 

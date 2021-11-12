@@ -2,6 +2,16 @@ import numpy as np
 from skimage.draw import disk, line as line_, polygon
 
 def renderFrame(args, bins, j):
+	if(len(bins) == 1):
+		bins = bins[0]
+		frame = renderMonoChannel(args, bins, j)
+	if(len(bins) == 2):
+		frame = renderDualChannel(args, bins, j)
+	
+	return frame
+
+
+def renderMonoChannel(args, bins, j):
 	if(args.mirror != 0):
 		fullFrame = np.full((args.height, int(args.bins*(args.binWidth+args.binSpacing)), 3), args.backgroundColor)
 		fullFrame = fullFrame.astype(np.uint8)
@@ -69,14 +79,34 @@ def renderFrame(args, bins, j):
 			frame[start, end] = args.color
 
 	frame = np.flipud(frame)
+	if(args.channel != "dual"):
+		if(args.mirror == 1):
+			fullFrame[:frame.shape[0],:] = frame
+			fullFrame[frame.shape[0]:frame.shape[0]*2,:] = np.flipud(frame)
+			frame = fullFrame
+		elif(args.mirror == 2):
+			fullFrame[:frame.shape[0],:] = np.flipud(frame)
+			fullFrame[frame.shape[0]:frame.shape[0]*2,:] = frame
+			frame = fullFrame
+
+	return frame
+
+def renderDualChannel(args, bins, j):
+	left = bins[0]
+	right = bins[1]
+	frame = np.full((args.height, int(args.bins*(args.binWidth+args.binSpacing)), 3), args.backgroundColor)
+	frame = frame.astype(np.uint8)
+
+	frame1 = renderMonoChannel(args, left, j)
+	frame2 = renderMonoChannel(args, right, j)
+
 	if(args.mirror == 1):
-		fullFrame[:frame.shape[0],:] = frame
-		fullFrame[frame.shape[0]:frame.shape[0]*2,:] = np.flipud(frame)
-		frame = fullFrame
+		frame[:frame1.shape[0],:] = frame1
+		frame[frame2.shape[0]:frame2.shape[0]*2,:] = np.flipud(frame2)
 	elif(args.mirror == 2):
-		fullFrame[:frame.shape[0],:] = np.flipud(frame)
-		fullFrame[frame.shape[0]:frame.shape[0]*2,:] = frame
-		frame = fullFrame
+		frame[:frame1.shape[0],:] = np.flipud(frame1)
+		frame[frame2.shape[0]:frame.shape[0]*2,:] = frame2
+
 	return frame
 
 

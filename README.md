@@ -53,7 +53,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-fr, --framerate` Framerate of the output video/image sequence (Frames per second). Default: 30
 
-`-ch, --channel` Which channel to use (left, right, average). Default: average
+`-ch, --channel` Which channel to use (left, right, average, dual). Default: average
 
 `-d, --duration` Length of audio input per frame in ms. Default: Duration will be one frame long (1/framerate)
 
@@ -85,7 +85,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-lt, --lineThickness` Thickness of the line in px. Default: 1
 
-`-m, --mirror` Mirros the spectrum at y-axis. 1: Middle, 2: Top/Bottom Default: 0
+`-m, --mirror` Mirros the spectrum at x-axis. 1: Middle, 2: Top/Bottom Default: 0
 
 `-c, --color` Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)
 
@@ -120,7 +120,7 @@ IKEA: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folde
 
 <img src="screenshots/ikea.png" alt="default" style="zoom: 50%;" />
 
-Circles `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -st circles -bw 15`
+Circles: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -st circles -bw 15`
 
 <img src="screenshots/circles.png" alt="default" style="zoom: 50%;" />
 
@@ -128,18 +128,18 @@ Donuts: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Fol
 
 <img src="screenshots/donuts.png" alt="default" style="zoom: 50%;" />
 
-Line `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 256 -st line -lt 3 -c lime`
+Line: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 256 -st line -lt 3 -c lime`
 
 <img src="screenshots/line.png" alt="default" style="zoom: 50%;" />
 
-Fill `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 256 -st fill -c lime`
+Fill: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -b 256 -st fill -c lime`
 
 <img src="screenshots/fill.png" alt="default" style="zoom: 50%;" />
 
-Mirror 1 `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -m 1`
+Mirror 1: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -m 1`
 
 <img src="screenshots/mirror1.png" alt="default" style="zoom: 50%;" />
 
-Mirror 2 `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -m 2`
+Mirror 2: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -m 2`
 
 <img src="screenshots/mirror2.png" alt="default" style="zoom: 50%;" />
