@@ -6,7 +6,7 @@ def renderFrame(args, bins, j):
 		bins = bins[0]
 		frame = renderMonoChannel(args, bins, j)
 	if(len(bins) == 2):
-		frame = renderDualChannel(args, bins, j)
+		frame = renderStereoChannel(args, bins, j)
 	
 	return frame
 
@@ -75,7 +75,7 @@ def renderMonoChannel(args, bins, j):
 			frame[rr, cc] = args.color
 
 	frame = np.flipud(frame)
-	if(args.channel != "dual"):
+	if(args.channel != "stereo"):
 		if(args.mirror == 1):
 			fullFrame[:frame.shape[0],:] = frame
 			fullFrame[frame.shape[0]:frame.shape[0]*2,:] = np.flipud(frame)
@@ -87,7 +87,7 @@ def renderMonoChannel(args, bins, j):
 
 	return frame
 
-def renderDualChannel(args, bins, j):
+def renderStereoChannel(args, bins, j):
 	left = bins[0]
 	right = bins[1]
 	frame = np.full((args.height, int(args.bins*(args.binWidth+args.binSpacing)), 3), args.backgroundColor)

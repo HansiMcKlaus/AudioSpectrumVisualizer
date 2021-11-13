@@ -46,7 +46,7 @@ def initArgs():
 						help="Framerate of the output video/image sequence (Frames per second). Default: 30")
 
 	parser.add_argument("-ch", "--channel", type=str, default="average",
-						help="Which channel to use (left, right, average, dual). Default: average")
+						help="Which channel to use (left, right, average, stereo). Default: average")
 
 	parser.add_argument("-d", "--duration", type=float, default=-1,
 						help="Length of audio input per frame in ms. Default: Duration will be one frame long (1/framerate)")
@@ -158,10 +158,10 @@ def processArgs(args, fileData, samplerate):
 	if args.framerate <= 0:
 		exit("Framerate must be at least 1.")
 
-	if args.channel not in ["left", "right", "average", "dual"]:
-		exit("Invalid channel. Valid channels: left, right, average, dual.")
+	if args.channel not in ["left", "right", "average", "stereo"]:
+		exit("Invalid channel. Valid channels: left, right, average, stereo.")
 
-	if len(fileData.shape) == 1 and args.channel == "dual":
+	if len(fileData.shape) == 1 and args.channel == "stereo":
 		exit("Audio only has a single channel. Valid channels: left, right, average.")
 
 	if args.style not in ["bars", "circles", "donuts", "line", "fill"]:
@@ -278,7 +278,7 @@ def processArgs(args, fileData, samplerate):
 	if args.color == args.backgroundColor:
 		print("Bro, what?")
 
-	if args.channel == "dual" and args.mirror == 0:
+	if args.channel == "stereo" and args.mirror == 0:
 		args.mirror = 1
 
 	if args.duration == -1:

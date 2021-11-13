@@ -53,7 +53,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-fr, --framerate` Framerate of the output video/image sequence (Frames per second). Default: 30
 
-`-ch, --channel` Which channel to use (left, right, average, dual). Default: average
+`-ch, --channel` Which channel to use (left, right, average, stereo). Default: average
 
 `-d, --duration` Length of audio input per frame in ms. Default: Duration will be one frame long (1/framerate)
 
