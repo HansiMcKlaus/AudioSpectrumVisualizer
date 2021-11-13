@@ -69,14 +69,10 @@ def renderMonoChannel(args, bins, j):
 				endX = frame.shape[1] - 1
 			else:
 				endX = int((k+1) * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
-			line = np.array((
-				(startY, startX),					# Up Left
-				(0, startX),						# Down Left
-				(0, endX),							# Down Right
-				(endY, endX),						# Up Right
-			))
-			start, end = polygon(line[:, 0], line[:, 1], frame.shape)
-			frame[start, end] = args.color
+			r = [startY, endY, 0, 0]
+			c = [startX, endX, endX, startX]
+			rr, cc = polygon(r, c, frame.shape)
+			frame[rr, cc] = args.color
 
 	frame = np.flipud(frame)
 	if(args.channel != "dual"):
