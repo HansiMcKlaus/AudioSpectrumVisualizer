@@ -18,6 +18,7 @@ def renderMonoChannel(args, bins, j):
 		height = int(args.height/2)
 	else:
 		height = args.height
+
 	frame = np.full((height, int(args.bins*(args.binWidth+args.binSpacing)), 3), args.backgroundColor)
 	frame = frame.astype(np.uint8)					# Set datatype to uint8 to reduce RAM usage
 
@@ -58,21 +59,46 @@ def renderMonoChannel(args, bins, j):
 		frame = paddedFrame[:,int(args.lineThickness):int(-args.lineThickness)]
 
 	if(args.style == "fill"):
-		for k in range(args.bins - 1):
-			startY = np.ceil(bins[j,k]*height)
-			if(k == 0):
-				startX = 0
-			else:
-				startX = int(k * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
-			endY = np.ceil(bins[j,k+1]*height)
-			if(k == args.bins - 2):
-				endX = frame.shape[1] - 1
-			else:
-				endX = int((k+1) * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
-			r = [startY, endY, 0, 0]
-			c = [startX, endX, endX, startX]
-			rr, cc = polygon(r, c, frame.shape)
-			frame[rr, cc] = args.color
+		if args.radial:
+			midHeight = int(height/2)
+			midWidth = int(args.width/2)
+			maxLength = args.radiusEnd - args.radiusStart
+			for k in range(args.bins):
+				vertex1Y = int(midHeight + (args.radiusStart * np.cos(2*np.pi * (k/args.bins))))
+				vertex1X = int(midWidth + (args.radiusStart * np.sin(2*np.pi * (k/args.bins))))
+				vertex2Y = int(midHeight + (args.radiusStart + bins[j,k]*maxLength) * np.cos(2*np.pi * (k/args.bins)))
+				vertex2X = int(midWidth + (args.radiusStart + bins[j,k]*maxLength) * np.sin(2*np.pi * (k/args.bins)))
+				if k == args.bins - 1:
+					vertex3Y = int(midHeight + (args.radiusStart + bins[j,0]*maxLength) * np.cos(2*np.pi * (0/args.bins)))
+					vertex3X = int(midWidth + (args.radiusStart + bins[j,0]*maxLength) * np.sin(2*np.pi * (0/args.bins)))
+					vertex4Y = int(midHeight + (args.radiusStart * np.cos(2*np.pi * (0/args.bins))))
+					vertex4X = int(midWidth + (args.radiusStart * np.sin(2*np.pi * (0/args.bins))))
+				else:
+					vertex3Y = int(midHeight + (args.radiusStart + bins[j,k+1]*maxLength) * np.cos(2*np.pi * ((k+1)/args.bins)))
+					vertex3X = int(midWidth + (args.radiusStart + bins[j,k+1]*maxLength) * np.sin(2*np.pi * ((k+1)/args.bins)))
+					vertex4Y = int(midHeight + (args.radiusStart * np.cos(2*np.pi * ((k+1)/args.bins))))
+					vertex4X = int(midWidth + (args.radiusStart * np.sin(2*np.pi * ((k+1)/args.bins))))
+
+				r = [vertex1Y, vertex2Y, vertex3Y, vertex4Y]
+				c = [vertex1X, vertex2X, vertex3X, vertex4X]
+				rr, cc = polygon(r, c, frame.shape)
+				frame[rr, cc] = args.color
+		else:
+			for k in range(args.bins - 1):
+				startY = np.ceil(bins[j,k]*height)
+				if(k == 0):
+					startX = 0
+				else:
+					startX = int(k * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
+				endY = np.ceil(bins[j,k+1]*height)
+				if(k == args.bins - 2):
+					endX = frame.shape[1] - 1
+				else:
+					endX = int((k+1) * (args.binWidth + args.binSpacing) + 0.5 * (args.binWidth + args.binSpacing))
+				r = [startY, endY, 0, 0]
+				c = [startX, endX, endX, startX]
+				rr, cc = polygon(r, c, frame.shape)
+				frame[rr, cc] = args.color
 
 	frame = np.flipud(frame)
 	if(args.channel != "stereo"):

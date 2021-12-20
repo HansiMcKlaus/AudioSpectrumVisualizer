@@ -73,7 +73,7 @@ def initArgs():
 						help="Limits the range of frequencies to <frequencyEnd>Hz. Default: Ends at highest frequency")
 
 	parser.add_argument("-is", "--imageSequence", action='store_true', default=False,
-						help="Export visualisation as frame-by-frame image sequence instead of video with audio. Default: False")
+						help="Export visualization as frame-by-frame image sequence instead of video with audio. Default: False")
 
 	# Optional arguments - Style
 	parser.add_argument("-t", "--test", action='store_true', default=False,
@@ -89,7 +89,16 @@ def initArgs():
 					help="Thickness of the line in px. Default: 1")
 	
 	parser.add_argument("-m", "--mirror", type=int, default=0,
-					help="Mirros the spectrum at x-axis. 1: middle, 2: top/bottom Default: 0")
+					help="Mirrors the spectrum at x-axis. 1: middle, 2: top/bottom Default: 0")
+
+	parser.add_argument("-r", "--radial", action='store_true', default=False,
+						help="Creates a radial (circle) visualization. Size is determined by height. Default: False")
+
+	parser.add_argument("-rs", "--radiusStart", type=float, default=-1,
+					help="Radius from where to start. Default: Quarter of Height")
+
+	parser.add_argument("-re", "--radiusEnd", type=float, default=-1,
+					help="Radius to where to end. Default: Half of Height")
 
 	parser.add_argument("-c", "--color", type=str, default="ffffff",
 						help="Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)")
@@ -170,8 +179,11 @@ def processArgs(args, fileData, samplerate):
 	if args.barHeight < 1 and args.barHeight != -1:
 		exit("Bar height must be at least 1px.")
 
+	if args.barHeight > args.height:
+		exit("Bar height must not exceed image height of " + str(args.height) + "px.")
+
 	if args.lineThickness < 1:
-		exit("Line thicknes must be at least 1px.")
+		exit("Line thickness must be at least 1px.")
 
 	if args.mirror < 0 or args.mirror > 2:
 		exit("Mirror argument only accepts 0 (off), 1 (middle), 2 (top/bottom).")
@@ -242,6 +254,26 @@ def processArgs(args, fileData, samplerate):
 		if args.frequencyStart >= args.frequencyEnd:
 			exit("Frequency start must be lower than frequency end.")
 
+	if args.radiusStart != -1:
+		if args.radiusStart < 0:
+			exit("Start radius must must not be smaller than 0px.")
+
+	if args.radiusEnd != -1:
+		if args.radiusEnd <= 0:
+			exit("End radius must be bigger than 0px.")
+
+	if args.radiusStart != -1:
+		if args.radiusStart >= args.height/2:
+			exit("Start radius exceeds max radius of " + str(int(args.height/2)) + "px.")
+
+	if args.radiusEnd != -1:
+		if args.radiusEnd > args.height/2:
+			exit("End radius exceeds max radius of " + str(int(args.height/2)) + "px.")
+
+	if args.radiusStart != -1 and args.radiusEnd != -1:
+		if args.radiusStart >= args.radiusEnd:
+			exit("Start radius must be smaller than end radius.")
+
 	if args.chunkSize == 0 or args.chunkSize < -1:
 		exit("Chunk size must be at least 1.")
 
@@ -249,27 +281,23 @@ def processArgs(args, fileData, samplerate):
 		exit("Number of processes must be at least 1")
 
 	# Process optional arguments:
-	
 	if args.test:
 		args.framerate = 30												# Forces framerate when style testing
 		args.duration = -1
 		args.processes = 1												# Makes the style-testing code easier to fit
-		args.imageSequence = True											# Forces no video when style testing
+		args.imageSequence = True										# Forces no video when style testing
 
 	if args.binWidth == -1 and args.binSpacing != -1:					# Only binSpacing is given
 		args.binWidth = args.width/args.bins - args.binSpacing
 		args.binSpacing = args.binSpacing
-	elif args.binWidth != -1 and args.binSpacing == -1:				# Only binWidth is given
+	elif args.binWidth != -1 and args.binSpacing == -1:					# Only binWidth is given
 		args.binWidth = args.binWidth
 		args.binSpacing = args.width/args.bins - args.binWidth
-	elif args.binWidth == -1 and args.binSpacing == -1:				# Neither is given
+	elif args.binWidth == -1 and args.binSpacing == -1:					# Neither is given
 		args.binWidth = args.width/args.bins * (5/6)
 		args.binSpacing = args.width/args.bins * (1/6)
 	else:																# Both are given (Overwrites width)
 		args.width = int((args.binWidth + args.binSpacing) * args.bins)
-
-	if args.barHeight > args.height:
-		exit("Bar height must not exceed image height of " + str(args.height) + "px.")
 
 	args.color = hex2rgb(args.color)									# Color of bins
 
@@ -284,7 +312,7 @@ def processArgs(args, fileData, samplerate):
 	if args.duration == -1:
 		args.duration = 1000/args.framerate			# Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1
 
-	if args.smoothY == "auto":						# Smoothing over past/next <smoothY> bins (Smoothes bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
+	if args.smoothY == "auto":						# Smoothing over past/next <smoothY> bins (Smooths bin with adjacent bins). If smoothY=auto: Automatic smoothing is applied (bins/32). Default: 0
 		args.smoothY = int(args.bins/32)
 	else:
 		args.smoothY = int(args.smoothY)
@@ -304,10 +332,16 @@ def processArgs(args, fileData, samplerate):
 	else:
 		args.frequencyStart = args.frequencyStart
 
-	if args.frequencyEnd == -1:					# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1
+	if args.frequencyEnd == -1:						# Limits the range of frequencies to <frequencyEnd>Hz. If frequencyEnd=-1: Ends at highest frequency. Default: -1
 		args.frequencyEnd = samplerate/2
 	else:
 		args.frequencyEnd = args.frequencyEnd
+
+	if args.radiusStart == -1:
+		args.radiusStart = args.height/6
+
+	if args.radiusEnd == -1:
+		args.radiusEnd = args.height/2
 
 	if args.processes == -1:
 		args.processes = cpu_count()
