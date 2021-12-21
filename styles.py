@@ -68,16 +68,11 @@ def renderMonoChannel(args, bins, j):
 				vertex1X = int(midWidth + (args.radiusStart * np.sin(2*np.pi * (k/args.bins))))
 				vertex2Y = int(midHeight + (args.radiusStart + bins[j,k]*maxLength) * np.cos(2*np.pi * (k/args.bins)))
 				vertex2X = int(midWidth + (args.radiusStart + bins[j,k]*maxLength) * np.sin(2*np.pi * (k/args.bins)))
-				if k == args.bins - 1:
-					vertex3Y = int(midHeight + (args.radiusStart + bins[j,0]*maxLength) * np.cos(2*np.pi * (0/args.bins)))
-					vertex3X = int(midWidth + (args.radiusStart + bins[j,0]*maxLength) * np.sin(2*np.pi * (0/args.bins)))
-					vertex4Y = int(midHeight + (args.radiusStart * np.cos(2*np.pi * (0/args.bins))))
-					vertex4X = int(midWidth + (args.radiusStart * np.sin(2*np.pi * (0/args.bins))))
-				else:
-					vertex3Y = int(midHeight + (args.radiusStart + bins[j,k+1]*maxLength) * np.cos(2*np.pi * ((k+1)/args.bins)))
-					vertex3X = int(midWidth + (args.radiusStart + bins[j,k+1]*maxLength) * np.sin(2*np.pi * ((k+1)/args.bins)))
-					vertex4Y = int(midHeight + (args.radiusStart * np.cos(2*np.pi * ((k+1)/args.bins))))
-					vertex4X = int(midWidth + (args.radiusStart * np.sin(2*np.pi * ((k+1)/args.bins))))
+				kNext = (k+1) % (args.bins)
+				vertex3Y = int(midHeight + (args.radiusStart + bins[j,kNext]*maxLength) * np.cos(2*np.pi * (kNext/args.bins)))
+				vertex3X = int(midWidth + (args.radiusStart + bins[j,kNext]*maxLength) * np.sin(2*np.pi * (kNext/args.bins)))
+				vertex4Y = int(midHeight + (args.radiusStart * np.cos(2*np.pi * (kNext/args.bins))))
+				vertex4X = int(midWidth + (args.radiusStart * np.sin(2*np.pi * (kNext/args.bins))))
 
 				r = [vertex1Y, vertex2Y, vertex3Y, vertex4Y]
 				c = [vertex1X, vertex2X, vertex3X, vertex4X]
