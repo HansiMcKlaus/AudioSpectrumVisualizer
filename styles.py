@@ -37,7 +37,7 @@ def renderMonoChannel(args, bins, j):
 				circumference = args.circumference
 
 			for k in range(args.bins):
-				angle1 = k*(args.binWidth + args.binSpacing)/args.width + args.binSpacing/2/args.width
+				angle1 = k*(args.binWidth + args.binSpacing)/args.width + args.binSpacing/2/args.width		# Add rotation
 				angle2 = (k*(args.binWidth + args.binSpacing) + args.binWidth)/args.width + args.binSpacing/2/args.width
 				lastLength = 1
 
@@ -215,8 +215,10 @@ def renderStereoChannel(args, bins, j):
 		frame[:,int(frame1.shape[1]/2):] = frame2[:,int(frame1.shape[1]/2):]
 
 		if args.catgirl:
-			catgirl = image.imread('catgirl.jpg')
-			catgirl = catgirl[:,:,::-1]	# BRG to RGB
+			catgirl = image.imread('catgirl.png')
+			temp = catgirl[:,:,:3]
+			temp = temp[:,:,::-1]
+			catgirl = np.append(temp, catgirl[:,:,3:], axis=2)
 
 			size = (2*args.radiusStart)**2
 			size = size/2
@@ -228,10 +230,17 @@ def renderStereoChannel(args, bins, j):
 				scale = size/catgirl.shape[1]
 
 			catgirl = rescale(catgirl, scale, anti_aliasing=True, preserve_range=True, multichannel=True)
+			catgirl = (catgirl * 255).astype(np.uint8)
+			mask = catgirl[:,:,3] > 128
+
+			frameCatgirl = np.full((args.height, int(args.bins*(args.binWidth+args.binSpacing))), 0)
+			frameCatgirl = frameCatgirl.astype(np.bool)
+
 			offsetY = int(args.height/2 - catgirl.shape[0]/2)
 			offsetX = int(args.width/2 - catgirl.shape[1]/2)
+			frameCatgirl[offsetY:offsetY+catgirl.shape[0],offsetX:offsetX+catgirl.shape[1]] = mask
 
-			frame[offsetY:offsetY+catgirl.shape[0], offsetX:offsetX+catgirl.shape[1]] = catgirl
+			frame[frameCatgirl] = catgirl[mask,:3]
 
 	return frame
 
