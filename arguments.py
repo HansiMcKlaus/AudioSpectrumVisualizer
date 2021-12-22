@@ -69,6 +69,9 @@ def initArgs():
 	parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
 						help="Limits the range of frequencies to <frequencyStart>Hz and onward. Default: Starts at lowest frequency")
 
+	parser.add_argument("-cg", "--catgirl", action='store_true', default=False,
+						help="Adds catgirl in radial visualization. Default: False")
+
 	parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 						help="Limits the range of frequencies to <frequencyEnd>Hz. Default: Ends at highest frequency")
 
@@ -95,10 +98,13 @@ def initArgs():
 						help="Creates a radial (circle) visualization. Size is determined by height. Default: False")
 
 	parser.add_argument("-rs", "--radiusStart", type=float, default=-1,
-					help="Radius from where to start. Default: Quarter of Height")
+					help="Radius from where to start. Default: Sixth of Height")
 
 	parser.add_argument("-re", "--radiusEnd", type=float, default=-1,
 					help="Radius to where to end. Default: Half of Height")
+
+	parser.add_argument("-cc", "--circumference", type=float, default=1,
+					help="Length of Circumference of radial visualization. 1: Full, 0.5: Half. Default: 1 (Full)")
 
 	parser.add_argument("-c", "--color", type=str, default="ffffff",
 						help="Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)")
@@ -207,7 +213,7 @@ def processArgs(args, fileData, samplerate):
 			exit("Duration must be longer than 0ms.")
 
 	if args.duration != -1 and not args.test:
-		if args.duration > len(fileData)/samplerate:
+		if args.duration/1000 > len(fileData)/samplerate:
 			exit("Duration must not be longer than audio length of " + str(format(len(fileData)/samplerate, ".3f")) + "s.")
 
 	if args.smoothY != "auto" :
@@ -274,6 +280,9 @@ def processArgs(args, fileData, samplerate):
 		if args.radiusStart >= args.radiusEnd:
 			exit("Start radius must be smaller than end radius.")
 
+	if args.circumference < 0 or args.circumference > 1:
+		exit("circumference must be between 0 and 1.")
+
 	if args.chunkSize == 0 or args.chunkSize < -1:
 		exit("Chunk size must be at least 1.")
 
@@ -308,6 +317,9 @@ def processArgs(args, fileData, samplerate):
 
 	if args.channel == "stereo" and args.mirror == 0:
 		args.mirror = 1
+
+	if args.radial == 1:
+		args.mirror = 0
 
 	if args.duration == -1:
 		args.duration = 1000/args.framerate			# Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1
