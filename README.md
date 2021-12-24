@@ -21,6 +21,8 @@ This script requires [ffmpeg](https://ffmpeg.org/download.html).
     
     [Here](https://www.thewindowsclub.com/how-to-install-ffmpeg-on-windows-10) is a guide that explains the process in detail.
 
+
+
 ## Usage
 
 Open a command line and change into the directory where the program is located. It is easiest to simply copy the audio file into the same directory, however not at all necessary.
@@ -55,7 +57,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-ch, --channel` Which channel to use (left, right, average, stereo). Default: average
 
-`-d, --duration` Length of audio input per frame in ms. Default: Duration will be one frame long (1/framerate)
+`-d, --duration` Length of audio sample per frame in ms. Default: Duration will be one frame long (1/framerate)
 
 `-s, --start` Begins render at \<start> seconds. Default: Renders from the start of the sound file
 
@@ -71,7 +73,7 @@ Example for when audio and destination directory are not in the same directory a
 
 `-fe, --frequencyEnd` Limits the range of frequencies to \<frequencyEnd>Hz. Default: Ends at highest frequency
 
-`-is, --imageSequence` Export visualisation as frame-by-frame image sequence instead of .mp4 with audio. Default: False"
+`-is, --imageSequence` Export visualization as frame-by-frame image sequence instead of .mp4 with audio. Default: False"
 
 
 
@@ -83,9 +85,19 @@ Example for when audio and destination directory are not in the same directory a
 
 `-bht, --barHeight` Height of the bars in px. Default: full
 
-`-lt, --lineThickness` Thickness of the line in px. Default: 1
+`-lt, --lineThickness` Thickness of the line in px. Default: 3
 
-`-m, --mirror` Mirros the spectrum at x-axis. 1: Middle, 2: Top/Bottom Default: 0
+`-m, --mirror` Mirrors the spectrum at x-axis. 1: Middle, 2: Top/Bottom Default: 0
+
+`-r, --radial` Creates a radial (circle) visualization. Size is determined by height. Default: False
+
+`-rs, --radiusStart` Inner radius in px. Default: 1/6 Height
+
+`-re, --radiusEnd` Outer radius in px. Default: 1/2 Height
+
+`-cc, --circumference` Circumference of radial visualization in degrees. Default: 360 (Full)
+
+`-rt, --rotation` Rotation offset of radial visualization in degrees. Default: 0
 
 `-c, --color` Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)
 
@@ -93,6 +105,10 @@ Example for when audio and destination directory are not in the same directory a
 
 Color names are equal to the named colors supported by HTML and CSS: [Overview of named colors](https://htmlcolorcodes.com/color-names/).<br>
 Custom colors can be added to the `colors` dictionary in `color.py` in the form of `"<color name>": [R, G, B],`.
+
+`-cg, --catgirl` Adds catgirl in radial visualization. Default: False
+
+A `.png` named `catgirl.png` must exist in the same directory.
 
 
 
@@ -143,3 +159,11 @@ Mirror 1: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination F
 Mirror 2: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -m 2`
 
 <img src="screenshots/mirror2.png" alt="default" style="zoom: 50%;" />
+
+Radial 1: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -r -st line`
+
+<img src="screenshots/radial_1.png" alt="default" style="zoom: 50%;" />
+
+Radial 2: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -r -cc 180 -rt -90 -st fill`
+
+<img src="screenshots/radial_2.png" alt="default" style="zoom: 50%;" />

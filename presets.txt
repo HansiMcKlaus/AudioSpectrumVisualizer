@@ -8,4 +8,4 @@ fill -b 256 -st fill -c lime
 mirror1 -m 1
 mirror2 -m 2
 pretty -fe 8000 -d 100 -ht 1080
-test -fr 13 -ht 418 -va -fs 520
+test -fr 13 -ht 418 -fs 520

@@ -4,6 +4,9 @@ import argparse
 import sys
 import os
 from joblib import cpu_count
+from matplotlib import image
+import numpy as np
+from skimage.transform import rescale
 
 args = None
 DEFAULT_CHUNKSIZE = 128
@@ -69,9 +72,6 @@ def initArgs():
 	parser.add_argument("-fs", "--frequencyStart", type=float, default=0,
 						help="Limits the range of frequencies to <frequencyStart>Hz and onward. Default: Starts at lowest frequency")
 
-	parser.add_argument("-cg", "--catgirl", action='store_true', default=False,
-						help="Adds catgirl in radial visualization. Default: False")
-
 	parser.add_argument("-fe", "--frequencyEnd", type=float, default=-1,
 						help="Limits the range of frequencies to <frequencyEnd>Hz. Default: Ends at highest frequency")
 
@@ -88,7 +88,7 @@ def initArgs():
 	parser.add_argument("-bht", "--barHeight", type=float, default=-1,
 						help="Height of the bars in px. Default: full")
 
-	parser.add_argument("-lt", "--lineThickness", type=float, default=1,
+	parser.add_argument("-lt", "--lineThickness", type=float, default=3,
 					help="Thickness of the line in px. Default: 1")
 	
 	parser.add_argument("-m", "--mirror", type=int, default=0,
@@ -98,19 +98,25 @@ def initArgs():
 						help="Creates a radial (circle) visualization. Size is determined by height. Default: False")
 
 	parser.add_argument("-rs", "--radiusStart", type=float, default=-1,
-					help="Radius from where to start. Default: Sixth of Height")
+					help="Inner radius in px. Default: 1/6 of Height")
 
 	parser.add_argument("-re", "--radiusEnd", type=float, default=-1,
-					help="Radius to where to end. Default: Half of Height")
+					help="Outer radius in px. Default: Half of Height")
 
-	parser.add_argument("-cc", "--circumference", type=float, default=1,
-					help="Length of Circumference of radial visualization. 1: Full, 0.5: Half. Default: 1 (Full)")
+	parser.add_argument("-cc", "--circumference", type=float, default=360,
+					help="Circumference of radial visualization in degrees. Default: 360 (Full)")
+
+	parser.add_argument("-rt", "--rotation", type=float, default=0,
+					help="Rotation offset of radial visualization in degrees. Default: 0")
 
 	parser.add_argument("-c", "--color", type=str, default="ffffff",
 						help="Color of bins (bars, points, etc). Ex: ff0000 or red. Default: ffffff (white)")
 
 	parser.add_argument("-bgc", "--backgroundColor", type=str, default="000000",
 						help="Color of the background. Ex: ff0000 or red. Default: 000000 (black)")
+
+	parser.add_argument("-cg", "--catgirl", action='store_true', default=False,
+						help="Adds catgirl in radial visualization. Default: False")
 
 	# Optional arguments - Performance
 	parser.add_argument("-cs", "--chunkSize", type=int, default=-1,
@@ -280,8 +286,8 @@ def processArgs(args, fileData, samplerate):
 		if args.radiusStart >= args.radiusEnd:
 			exit("Start radius must be smaller than end radius.")
 
-	if args.circumference < 0 or args.circumference > 1:
-		exit("circumference must be between 0 and 1.")
+	if args.circumference < 0 or args.circumference > 360:
+		exit("Circumference must be between 0 and 360.")
 
 	if args.chunkSize == 0 or args.chunkSize < -1:
 		exit("Chunk size must be at least 1.")
@@ -320,6 +326,12 @@ def processArgs(args, fileData, samplerate):
 
 	if args.radial == 1:
 		args.mirror = 0
+		if args.channel == "stereo":
+			args.circumference = args.circumference/2
+	
+	args.circumference = args.circumference/360		# Normalizes degrees to value between 0 and 1
+
+	args.rotation = args.rotation/360				# Normalizes degrees
 
 	if args.duration == -1:
 		args.duration = 1000/args.framerate			# Length of audio input per frame in ms. If duration=-1: Duration will be one frame long (1/framerate). Default: -1
@@ -354,6 +366,32 @@ def processArgs(args, fileData, samplerate):
 
 	if args.radiusEnd == -1:
 		args.radiusEnd = args.height/2
+
+	if args.catgirl:
+		args.catgirlImage = image.imread('catgirl.png')
+
+		temp = args.catgirlImage[:,:,:3]
+		temp = temp[:,:,::-1]
+		args.catgirlImage = np.append(temp, args.catgirlImage[:,:,3:], axis=2)
+
+		size = (2*args.radiusStart)**2
+		size = size/2
+		size = np.sqrt(size)
+
+		if args.catgirlImage.shape[0] > args.catgirlImage.shape[1]:
+			scale = size/args.catgirlImage.shape[0]
+		else:
+			scale = size/args.catgirlImage.shape[1]
+
+		args.catgirlImage = rescale(args.catgirlImage, scale, anti_aliasing=True, preserve_range=True, multichannel=True)
+		args.catgirlImage = (args.catgirlImage * 255).astype(np.uint8)
+		args.catgirlImageMask = args.catgirlImage[:,:,3] > 128
+
+		frameMask = np.full((args.height, args.width), 0).astype(np.bool)
+		offsetY = int(args.height/2 - args.catgirlImage.shape[0]/2)
+		offsetX = int(args.width/2 - args.catgirlImage.shape[1]/2)
+		frameMask[offsetY:offsetY+args.catgirlImage.shape[0],offsetX:offsetX+args.catgirlImage.shape[1]] = args.catgirlImageMask
+		args.frameMask = frameMask
 
 	if args.processes == -1:
 		args.processes = cpu_count()
