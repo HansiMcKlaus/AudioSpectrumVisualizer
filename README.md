@@ -106,9 +106,7 @@ Example for when audio and destination directory are not in the same directory a
 Color names are equal to the named colors supported by HTML and CSS: [Overview of named colors](https://htmlcolorcodes.com/color-names/).<br>
 Custom colors can be added to the `colors` dictionary in `color.py` in the form of `"<color name>": [R, G, B],`.
 
-`-cg, --catgirl` Adds catgirl in radial visualization. Default: False
-
-A `.png` named `catgirl.png` must exist in the same directory.
+`-i, --image` Adds an image in radial visualization if given path (See example)
 
 
 
@@ -167,3 +165,7 @@ Radial 1: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination F
 Radial 2: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -r -cc 180 -rt -90 -st fill`
 
 <img src="screenshots/radial_2.png" alt="default" style="zoom: 50%;" />
+
+Image: `python AudioSpectrumVisualizer.py <Path to Audio File> <Destination Folder> -r -i "catgirl.png"`
+
+<img src="screenshots/radial_image.png" alt="default" style="zoom: 50%;" />

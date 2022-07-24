@@ -7,6 +7,7 @@ from joblib import cpu_count
 from matplotlib import image
 import numpy as np
 from skimage.transform import rescale
+from os import path
 
 args = None
 DEFAULT_CHUNKSIZE = 128
@@ -115,8 +116,8 @@ def initArgs():
 	parser.add_argument("-bgc", "--backgroundColor", type=str, default="000000",
 						help="Color of the background. Ex: ff0000 or red. Default: 000000 (black)")
 
-	parser.add_argument("-cg", "--catgirl", action='store_true', default=False,
-						help="Adds catgirl in radial visualization. Default: False")
+	parser.add_argument("-i", "--image", type=str,
+						help="Adds image in radial visualization. Default: False")
 
 	# Optional arguments - Performance
 	parser.add_argument("-cs", "--chunkSize", type=int, default=-1,
@@ -289,6 +290,9 @@ def processArgs(args, fileData, samplerate):
 	if args.circumference < 0 or args.circumference > 360:
 		exit("Circumference must be between 0 and 360.")
 
+	if not path.isfile(args.image):
+		exit("Path to image does not exist.")
+
 	if args.chunkSize == 0 or args.chunkSize < -1:
 		exit("Chunk size must be at least 1.")
 
@@ -367,30 +371,30 @@ def processArgs(args, fileData, samplerate):
 	if args.radiusEnd == -1:
 		args.radiusEnd = args.height/2
 
-	if args.catgirl:
-		args.catgirlImage = image.imread('catgirl.png')
+	if args.image:
+		args.radialImage = image.imread(args.image)
 
-		temp = args.catgirlImage[:,:,:3]
+		temp = args.radialImage[:,:,:3]
 		temp = temp[:,:,::-1]
-		args.catgirlImage = np.append(temp, args.catgirlImage[:,:,3:], axis=2)
+		args.radialImage = np.append(temp, args.radialImage[:,:,3:], axis=2)
 
 		size = (2*args.radiusStart)**2
 		size = size/2
 		size = np.sqrt(size)
 
-		if args.catgirlImage.shape[0] > args.catgirlImage.shape[1]:
-			scale = size/args.catgirlImage.shape[0]
+		if args.radialImage.shape[0] > args.radialImage.shape[1]:
+			scale = size/args.radialImage.shape[0]
 		else:
-			scale = size/args.catgirlImage.shape[1]
+			scale = size/args.radialImage.shape[1]
 
-		args.catgirlImage = rescale(args.catgirlImage, scale, anti_aliasing=True, preserve_range=True, channel_axis=-1)
-		args.catgirlImage = (args.catgirlImage * 255).astype(np.uint8)
-		args.catgirlImageMask = args.catgirlImage[:,:,3] > 128
+		args.radialImage = rescale(args.radialImage, scale, anti_aliasing=True, preserve_range=True, channel_axis=-1)
+		args.radialImage = (args.radialImage * 255).astype(np.uint8)
+		args.radialImageMask = args.radialImage[:,:,3] > 128
 
 		frameMask = np.full((args.height, args.width), 0).astype(np.bool)
-		offsetY = int(args.height/2 - args.catgirlImage.shape[0]/2)
-		offsetX = int(args.width/2 - args.catgirlImage.shape[1]/2)
-		frameMask[offsetY:offsetY+args.catgirlImage.shape[0],offsetX:offsetX+args.catgirlImage.shape[1]] = args.catgirlImageMask
+		offsetY = int(args.height/2 - args.radialImage.shape[0]/2)
+		offsetX = int(args.width/2 - args.radialImage.shape[1]/2)
+		frameMask[offsetY:offsetY+args.radialImage.shape[0],offsetX:offsetX+args.radialImage.shape[1]] = args.radialImageMask
 		args.frameMask = frameMask
 
 	if args.processes == -1:
