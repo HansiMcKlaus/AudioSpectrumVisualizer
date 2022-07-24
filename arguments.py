@@ -383,7 +383,7 @@ def processArgs(args, fileData, samplerate):
 		else:
 			scale = size/args.catgirlImage.shape[1]
 
-		args.catgirlImage = rescale(args.catgirlImage, scale, anti_aliasing=True, preserve_range=True, multichannel=True)
+		args.catgirlImage = rescale(args.catgirlImage, scale, anti_aliasing=True, preserve_range=True, channel_axis=-1)
 		args.catgirlImage = (args.catgirlImage * 255).astype(np.uint8)
 		args.catgirlImageMask = args.catgirlImage[:,:,3] > 128
 

@@ -161,6 +161,9 @@ def renderMonoChannel(args, bins, j):
 			fullFrame[frame.shape[0]:frame.shape[0]*2,:] = frame
 			frame = fullFrame
 
+		if args.catgirl and args.radial:
+			frame[args.frameMask] = args.catgirlImage[args.catgirlImageMask,:3]
+
 	return frame
 
 def renderStereoChannel(args, bins, j):
