@@ -290,7 +290,7 @@ def processArgs(args, fileData, samplerate):
 	if args.circumference < 0 or args.circumference > 360:
 		exit("Circumference must be between 0 and 360.")
 
-	if not path.isfile(args.image):
+	if args.image and not path.isfile(args.image):
 		exit("Path to image does not exist.")
 
 	if args.chunkSize == 0 or args.chunkSize < -1:
