@@ -1,5 +1,7 @@
 # AudioSpectrumVisualizer
 
+**NOTE: This project is abandoned**. The new project can be found at [HansiAudioVisualizer](https://github.com/HansiMcKlaus/HansiAudioVisualizer).
+
 Creates a customizable video for the spectrum of an audio file.
 
 
